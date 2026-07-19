@@ -89,7 +89,7 @@ class LoginController extends Controller
     {
         $this->businessUtil->activityLog($user, 'login', null, [], false, $user->business_id);
 
-        if (! $user->business->is_active) {
+        if (! $user->business?->is_active) {
             \Auth::logout();
 
             return redirect('/login')

@@ -1492,15 +1492,16 @@ class Util
         }
 
         $business = session()->has('business') ? session('business') : Business::find($business_id);
-
-        date_default_timezone_set($business->time_zone);
+        if (isset($business)){
+            date_default_timezone_set($business->time_zone);
+        }
 
         $activity = activity()
             ->performedOn($on)
             ->withProperties($properties)
             ->log($action);
 
-        $activity->business_id = $business_id;
+        $activity->business_id = $business_id ?? null;
         $activity->save();
     }
 

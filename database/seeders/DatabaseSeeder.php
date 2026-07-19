@@ -15,9 +15,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([BarcodesTableSeeder::class,
             PermissionsTableSeeder::class,
-            CurrenciesTableSeeder::class,
+            //CurrenciesTableSeeder::class,
             //BarcodesTableSeeder::class,
-            //DummyBusinessSeeder::class,
+            DummyBusinessSeeder::class,
+            UserSeeder::class
         ]);
     }
 }

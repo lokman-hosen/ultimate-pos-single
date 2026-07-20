@@ -13,12 +13,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call([BarcodesTableSeeder::class,
+        $this->call([
+            BarcodesTableSeeder::class,
             PermissionsTableSeeder::class,
-            //CurrenciesTableSeeder::class,
+            CurrenciesTableSeeder::class,
             //BarcodesTableSeeder::class,
-            DummyBusinessSeeder::class,
-            UserSeeder::class
+            //DummyBusinessSeeder::class,
+            //UserSeeder::class
         ]);
     }
 }

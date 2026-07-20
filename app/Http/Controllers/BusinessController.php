@@ -206,6 +206,7 @@ class BusinessController extends Controller
                 $business_details['logo'] = $logo_name;
             }
 
+
             //default enabled modules
             $business_details['enabled_modules'] = ['purchases', 'add_sale', 'pos_sale', 'stock_transfers', 'stock_adjustment', 'expenses'];
 
@@ -220,6 +221,7 @@ class BusinessController extends Controller
 
             //create new permission with the new location
             Permission::create(['name' => 'location.'.$new_location->id]);
+
 
             DB::commit();
 

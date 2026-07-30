@@ -80,6 +80,9 @@ Route::middleware(['setData'])->group(function () {
     });
 
     Auth::routes();
+    Route::match(['get', 'post'], 'register', function(){
+        return redirect('/login');
+    });
 
     Route::get('/business/register', [BusinessController::class, 'getRegister'])->name('business.getRegister');
     Route::post('/business/register', [BusinessController::class, 'postRegister'])->name('business.postRegister');

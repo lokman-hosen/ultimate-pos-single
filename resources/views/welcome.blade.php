@@ -1,5 +1,5 @@
 @extends('layouts.auth2')
-@section('title', config('app.name', 'ultimatePOS'))
+@section('title', config('app.name', 'ERP & Inventory'))
 @inject('request', 'Illuminate\Http\Request')
 @section('content')
     <div class="tw-relative tw-w-full tw-h-screen tw-overflow-hidden tw-flex tw-items-center tw-justify-center tw-bg-gradient-to-br tw-from-slate-900 tw-via-indigo-900 tw-to-purple-800">
@@ -14,7 +14,7 @@
 
             <!-- Title (1) -->
             <h1 class="tw-text-6xl md:tw-text-7xl tw-font-extrabold tw-text-white tw-tracking-tight tw-drop-shadow-2xl">
-                {{ config('app.name', 'UltimatePOS') }}
+                {{ config('app.name', 'ERP & Inventory') }}
             </h1>
 
             <!-- Caption (2) -->
@@ -50,12 +50,12 @@
 
             <!-- Action Buttons -->
             <div class="tw-mt-8 tw-flex tw-flex-wrap tw-justify-center tw-gap-4">
-                @if (config('constants.allow_registration'))
-                    <a href="{{ route('business.getRegister') }}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif"
-                       class="tw-px-8 tw-py-3 tw-w-48 tw-mt-3 tw-bg-white tw-text-indigo-900 tw-font-bold tw-rounded-full tw-shadow-xl hover:tw-shadow-2xl hover:tw-scale-105 tw-transition-all tw-duration-200">
-                        Get Started Free
-                    </a>
-                @endif
+{{--                @if (config('constants.allow_registration'))--}}
+{{--                    <a href="{{ route('business.getRegister') }}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif"--}}
+{{--                       class="tw-px-8 tw-py-3 tw-w-48 tw-mt-3 tw-bg-white tw-text-indigo-900 tw-font-bold tw-rounded-full tw-shadow-xl hover:tw-shadow-2xl hover:tw-scale-105 tw-transition-all tw-duration-200">--}}
+{{--                        Get Started Free--}}
+{{--                    </a>--}}
+{{--                @endif--}}
                 <a href="{{ action([\App\Http\Controllers\Auth\LoginController::class, 'login']) }}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif"
                    class="tw-px-8 tw-py-3 tw-w-48 tw-mt-3 tw-bg-transparent tw-border-2 tw-border-white tw-text-white tw-font-bold tw-rounded-full hover:tw-bg-white hover:tw-text-indigo-900 tw-transition-all tw-duration-200">
                     Sign In

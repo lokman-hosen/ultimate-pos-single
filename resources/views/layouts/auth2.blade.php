@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title') - {{ config('app.name', 'POS') }}</title>
+    <title>@yield('title') - {{ config('app.name', 'ERP & Inventory') }}</title>
 
     @include('layouts.partials.css')
     @include('layouts.partials.extracss_auth')
@@ -77,20 +77,20 @@
 
                 {{-- Top-right login/register/language --}}
                 <div class="tw-absolute tw-top-5 md:tw-top-8 tw-right-5 md:tw-right-10 tw-flex tw-items-center tw-gap-4" style="text-align: left">
-                    @if (!($request->segment(1) == 'business' && $request->segment(2) == 'register'))
-                        @if (config('constants.allow_registration'))
-                            <div class="tw-border-2 tw-border-white tw-rounded-full tw-h-10 md:tw-h-12 tw-w-24 tw-flex tw-items-center tw-justify-center">
-                                <a href="{{ route('business.getRegister')}}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif"
-                                   class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white">
-                                    {{ __('business.register') }}
-                                </a>
-                            </div>
-                            @if (Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing')
-                                &nbsp; <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"
-                                          href="{{ action([\Modules\Superadmin\Http\Controllers\PricingController::class, 'index']) }}">@lang('superadmin::lang.pricing')</a>
-                            @endif
-                        @endif
-                    @endif
+{{--                    @if (!($request->segment(1) == 'business' && $request->segment(2) == 'register'))--}}
+{{--                        @if (config('constants.allow_registration'))--}}
+{{--                            <div class="tw-border-2 tw-border-white tw-rounded-full tw-h-10 md:tw-h-12 tw-w-24 tw-flex tw-items-center tw-justify-center">--}}
+{{--                                <a href="{{ route('business.getRegister')}}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif"--}}
+{{--                                   class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white">--}}
+{{--                                    {{ __('business.register') }}--}}
+{{--                                </a>--}}
+{{--                            </div>--}}
+{{--                            @if (Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing')--}}
+{{--                                &nbsp; <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"--}}
+{{--                                          href="{{ action([\Modules\Superadmin\Http\Controllers\PricingController::class, 'index']) }}">@lang('superadmin::lang.pricing')</a>--}}
+{{--                            @endif--}}
+{{--                        @endif--}}
+{{--                    @endif--}}
                     @if ($request->segment(1) != 'login')
                         <a class="tw-text-white tw-font-medium tw-text-sm md:tw-text-base hover:tw-text-white"
                            href="{{ action([\App\Http\Controllers\Auth\LoginController::class, 'login'])}}@if(!empty(request()->lang))?lang={{ request()->lang }}@endif">{{ __('business.sign_in') }}</a>

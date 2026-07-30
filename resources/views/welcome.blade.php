@@ -70,8 +70,8 @@
         </div>
 
         <!-- Footer (Fit in single page) -->
-        <div class="tw-absolute tw-bottom-4 tw-left-0 tw-right-0 tw-text-center tw-text-white/30 tw-text-sm">
-            © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
-        </div>
+{{--        <div class="tw-absolute tw-bottom-4 tw-left-0 tw-right-0 tw-text-center tw-text-white/30 tw-text-sm">--}}
+{{--            © {{ date('Y') }} {{ config('app.name') }}. All rights reserved.--}}
+{{--        </div>--}}
     </div>
 @endsection

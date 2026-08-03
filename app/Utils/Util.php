@@ -283,19 +283,35 @@ class Util
      * @param  bool  $time (default = false)
      * @return strin
      */
+//    public function format_date($date, $show_time = false, $business_details = null)
+//    {
+//        $format = ! empty($business_details) ? $business_details->date_format : session('business.date_format');
+//        if (! empty($show_time)) {
+//            $time_format = ! empty($business_details) ? $business_details->time_format : session('business.time_format');
+//            if ($time_format == 12) {
+//                $format .= ' h:i A';
+//            } else {
+//                $format .= ' H:i';
+//            }
+//        }
+//
+//        return ! empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
+//    }
+
     public function format_date($date, $show_time = false, $business_details = null)
     {
+        if (empty($date)) {
+            return null;
+        }
+
         $format = ! empty($business_details) ? $business_details->date_format : session('business.date_format');
         if (! empty($show_time)) {
             $time_format = ! empty($business_details) ? $business_details->time_format : session('business.time_format');
-            if ($time_format == 12) {
-                $format .= ' h:i A';
-            } else {
-                $format .= ' H:i';
-            }
+            $format .= ($time_format == 12) ? ' h:i A' : ' H:i';
         }
 
-        return ! empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
+        // Use Carbon::parse – it respects the application timezone
+        return \Carbon\Carbon::parse($date)->format($format);
     }
 
     /**

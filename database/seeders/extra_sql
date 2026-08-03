@@ -1,0 +1,6 @@
+UIH New SQL for table change
+1. mysql -h 192.168.10.252 -P 3306 -u root -p uv_old </home/mcc/Downloads/db_backup_6_5_25.sql
+2. mysql -h 192.168.43.112 -P 3306 -u root_user -p university_new </home/lokman-hosen/Downloads/bd_uihp.sql
+
+UPDATE ALL USER PASSWORD TO 1-8
+1. UPDATE users SET users.password = '$2y$10$r59CptWXU.RaQvBiQv9/COzIZLJCFh3DLX7qnOGynJ7jZ/kQrawJq';

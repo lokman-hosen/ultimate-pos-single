@@ -181,14 +181,19 @@
 					@endphp
 		              {!! Form::label('pay_term_number', __('contact.pay_term') . ':') !!} @show_tooltip(__('tooltip.pay_term'))
 		              <br/>
-		              {!! Form::number('pay_term_number', $walk_in_customer['pay_term_number'], ['class' => 'form-control width-40 pull-left', 'placeholder' => __('contact.pay_term'), 'required' => $is_pay_term_required]); !!}
+						{!! Form::number('pay_term_number', 0, ['class' => 'form-control width-40 pull-left', 'placeholder' => __('contact.pay_term'), 'required' => $is_pay_term_required]); !!}
+{{--		              {!! Form::select('pay_term_type', --}}
+{{--		              	['months' => __('lang_v1.months'), --}}
+{{--		              		'days' => __('lang_v1.days')], --}}
+{{--		              		$walk_in_customer['pay_term_type'], --}}
+{{--		              	['class' => 'form-control width-60 pull-left','placeholder' => __('messages.please_select'), 'required' => $is_pay_term_required]); !!}--}}
+						{!! Form::select('pay_term_type',
+						['months' => __('lang_v1.months'), 'days' => __('lang_v1.days')],
+						'days',
+						['class' => 'form-control width-60 pull-left', 'placeholder' => __('messages.please_select'), 'required' => $is_pay_term_required])
+    !!}
 
-		              {!! Form::select('pay_term_type', 
-		              	['months' => __('lang_v1.months'), 
-		              		'days' => __('lang_v1.days')], 
-		              		$walk_in_customer['pay_term_type'], 
-		              	['class' => 'form-control width-60 pull-left','placeholder' => __('messages.please_select'), 'required' => $is_pay_term_required]); !!}
-		            </div>
+					</div>
 		          </div>
 		        </div>
 

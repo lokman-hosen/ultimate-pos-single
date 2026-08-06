@@ -37,8 +37,7 @@
     @yield('css')
 
 </head>
-<body
-    class="tw-font-sans tw-antialiased tw-text-gray-900 tw-bg-gray-100 @if ($pos_layout) hold-transition lockscreen @else hold-transition skin-@if (!empty(session('business.theme_color'))){{ session('business.theme_color') }}@else{{ 'blue-light' }} @endif sidebar-mini @endif" >
+<body class="tw-font-sans tw-antialiased tw-text-gray-900 tw-bg-gray-100 @if ($pos_layout) hold-transition lockscreen @else hold-transition skin-@if (!empty(session('business.theme_color'))){{ session('business.theme_color') }}@else{{ 'blue-light' }} @endif sidebar-mini @endif" >
     <div class="tw-flex thetop">
         <script type="text/javascript">
             if (localStorage.getItem("upos_sidebar_collapse") == 'true') {
@@ -138,58 +137,55 @@
                 @includeIf($additional_view)
             @endforeach
         @endif
-        <div>
 
-            <div class="overlay tw-hidden"></div>
-        </div>
-</body>
-<style>
-    @media print {
+        <div class="overlay tw-hidden"></div>
+
+    </div> {{-- /.thetop --}}
+
+    <style>
+        @media print {
+            #scrollable-container {
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            /* Hide side menu */
+            .side-bar,
+            .thetop > aside {
+                display: none !important;
+            }
+        }
+
+        .small-view-side-active {
+            display: flex !important;
+            flex-direction: column;
+            z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+        }
+
+        .overlay {
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: none;
+            z-index: 20;
+        }
+
+        .tw-dw-btn.tw-dw-btn-xs.tw-dw-btn-outline {
+            width: max-content;
+            margin: 2px;
+        }
+
         #scrollable-container {
-            overflow: visible !important;
-            height: auto !important;
+            position: relative;
         }
-        
-        /* Hide side menu */
-        .side-bar,
-        .thetop > aside {
-            display: none !important;
-        }
-    }
-</style>
-<style>
-    .small-view-side-active {
-        display: flex !important;
-        flex-direction: column;
-        z-index: 1000;
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-    }
-    .overlay {
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.8);
-        position: fixed;
-        top: 0;
-        left: 0;
-        display: none;
-        z-index: 20;
-    }
+    </style>
 
-    .tw-dw-btn.tw-dw-btn-xs.tw-dw-btn-outline {
-        width: max-content;
-        margin: 2px;
-    }
-
-    #scrollable-container{
-        position:relative;
-    }
-    
-
-
-
-</style>
-
+</body>
 </html>

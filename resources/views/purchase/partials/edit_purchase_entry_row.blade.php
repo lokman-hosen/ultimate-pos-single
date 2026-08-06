@@ -177,9 +177,9 @@
                         $profit_percent = (($sp - $pp) * 100 / $pp);
                     }
                 @endphp
-                
-                {!! Form::text('purchases[' . $loop->index . '][profit_percent]', 
-                number_format($profit_percent, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator), 
+
+                {!! Form::text('purchases[' . $loop->index . '][profit_percent]',
+                number_format($profit_percent, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator),
                 ['class' => 'form-control input-sm input_number profit_percent', 'required']); !!}
             </td>
             @if(empty($is_purchase_order))

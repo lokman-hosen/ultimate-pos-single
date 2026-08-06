@@ -120,6 +120,9 @@ class PurchaseController extends Controller
                     if (auth()->user()->can('purchase.update')) {
                         $html .= '<li><a href="'.action([\App\Http\Controllers\PurchaseController::class, 'edit'], [$row->id]).'"><i class="fas fa-edit"></i>'.__('messages.edit').'</a></li>';
                     }
+                    if (auth()->user()->can('purchase.update')) {
+                        $html .= '<li><a href="'.action([\App\Http\Controllers\PurchaseController::class, 'partialReceive'], [$row->id]).'"><i class="fas fa-plus"></i>Partial Receive</a></li>';
+                    }
                     if (auth()->user()->can('purchase.delete')) {
                         $html .= '<li><a href="'.action([\App\Http\Controllers\PurchaseController::class, 'destroy'], [$row->id]).'" class="delete-purchase"><i class="fas fa-trash"></i>'.__('messages.delete').'</a></li>';
                     }
@@ -1527,5 +1530,122 @@ class PurchaseController extends Controller
         }
 
         return $output;
+    }
+
+    public function partialReceive($id)
+    {
+        if (! auth()->user()->can('purchase.update')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+
+        //Check if subscribed or not
+        if (! $this->moduleUtil->isSubscribed($business_id)) {
+            return $this->moduleUtil->expiredResponse(action([\App\Http\Controllers\PurchaseController::class, 'index']));
+        }
+
+        //Check if the transaction can be edited or not.
+        $edit_days = request()->session()->get('business.transaction_edit_days');
+        if (! $this->transactionUtil->canBeEdited($id, $edit_days)) {
+            return back()
+                ->with('status', ['success' => 0,
+                    'msg' => __('messages.transaction_edit_not_allowed', ['days' => $edit_days]), ]);
+        }
+
+        //Check if return exist then not allowed
+        if ($this->transactionUtil->isReturnExist($id)) {
+            return back()->with('status', ['success' => 0,
+                'msg' => __('lang_v1.return_exist'), ]);
+        }
+
+        $business = Business::find($business_id);
+
+        $currency_details = $this->transactionUtil->purchaseCurrencyDetails($business_id);
+
+        $taxes = TaxRate::where('business_id', $business_id)
+            ->ExcludeForTaxGroup()
+            ->get();
+        $purchase = Transaction::where('business_id', $business_id)
+            ->where('id', $id)
+            ->with(
+                'contact',
+                'purchase_lines',
+                'purchase_lines.product',
+                'purchase_lines.product.unit',
+                'purchase_lines.product.second_unit',
+                //'purchase_lines.product.unit.sub_units',
+                'purchase_lines.variations',
+                'purchase_lines.variations.product_variation',
+                'location',
+                'purchase_lines.sub_unit',
+                'purchase_lines.purchase_order_line'
+            )
+            ->first();
+
+        foreach ($purchase->purchase_lines as $key => $value) {
+            if (! empty($value->sub_unit_id)) {
+                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
+                $purchase->purchase_lines[$key] = $formated_purchase_line;
+            }
+        }
+
+        $orderStatuses = $this->productUtil->orderStatuses();
+
+        $business_locations = BusinessLocation::forDropdown($business_id);
+
+        $default_purchase_status = null;
+        if (request()->session()->get('business.enable_purchase_status') != 1) {
+            $default_purchase_status = 'received';
+        }
+
+        $types = [];
+        if (auth()->user()->can('supplier.create')) {
+            $types['supplier'] = __('report.supplier');
+        }
+        if (auth()->user()->can('customer.create')) {
+            $types['customer'] = __('report.customer');
+        }
+        if (auth()->user()->can('supplier.create') && auth()->user()->can('customer.create')) {
+            $types['both'] = __('lang_v1.both_supplier_customer');
+        }
+        $customer_groups = CustomerGroup::forDropdown($business_id);
+
+        $business_details = $this->businessUtil->getDetails($business_id);
+        $shortcuts = json_decode($business_details->keyboard_shortcuts, true);
+
+        $common_settings = ! empty(session('business.common_settings')) ? session('business.common_settings') : [];
+
+        $purchase_orders = null;
+        if (! empty($common_settings['enable_purchase_order'])) {
+            $purchase_orders = Transaction::where('business_id', $business_id)
+                ->where('type', 'purchase_order')
+                ->where('contact_id', $purchase->contact_id)
+                ->where(function ($q) use ($purchase) {
+                    $q->where('status', '!=', 'completed');
+
+                    if (! empty($purchase->purchase_order_ids)) {
+                        $q->orWhereIn('id', $purchase->purchase_order_ids);
+                    }
+                })
+                ->pluck('ref_no', 'id');
+        }
+
+        return view('purchase.partial-receive')
+            ->with(compact(
+                'taxes',
+                'purchase',
+                'orderStatuses',
+                'business_locations',
+                'business',
+                'currency_details',
+                'default_purchase_status',
+                'customer_groups',
+                'types',
+                'shortcuts',
+                'purchase_orders',
+                'common_settings'
+            ));
+
     }
 }

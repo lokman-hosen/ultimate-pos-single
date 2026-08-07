@@ -1648,4 +1648,12 @@ class PurchaseController extends Controller
             ));
 
     }
+
+    public function partialReceiveStore(Request $request)
+    {
+        dd($request->all());
+        if (! auth()->user()->can('purchase.update')) {
+            abort(403, 'Unauthorized action.');
+        }
+    }
 }

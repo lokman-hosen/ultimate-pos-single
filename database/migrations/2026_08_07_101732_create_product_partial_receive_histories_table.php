@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+            $table->foreign('purchase_line_id')->references('id')->on('purchase_lines')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');// user who received the product
             $table->float('purchase_quantity')->comment('Ordered quantity from supplier');
             //$table->float('already_received_quantity')->comment('Total quantity received from supplier');
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->text('note')->nullable()->comment('Comment if any');
             $table->dateTime('date')->comment('Date of product partial receive');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

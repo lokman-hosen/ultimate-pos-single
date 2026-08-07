@@ -26,7 +26,6 @@
 
   @include('layouts.partials.error')
 
-  {!! Form::open(['url' =>  action([\App\Http\Controllers\PurchaseController::class, 'update'] , [$purchase->id] ), 'method' => 'PUT', 'id' => 'add_purchase_form', 'files' => true ]) !!}
 
   @php
     $currency_precision = session('business.currency_precision', 2);
@@ -87,11 +86,9 @@
                                 </td>
 
                                 <td>
-{{--                                    <i class="fa fa-times remove_purchase_entry_row text-danger" title="Remove" style="cursor:pointer;"></i>--}}
-                                    <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white partial-receive-modal" data-toggle="modal"
-                                            data-target="#partialReceiveModalSizeLg"
+                                    <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white partial-receive" data-toggle="modal"
                                             data-transaction-id="{{ $purchase->id }}"
-                                            data-id="{{ $purchase_line->id }}"
+                                            data-purchase-line-id="{{ $purchase_line->id }}"
                                             data-product-id="{{ $purchase_line->product->id }}"
                                             title="Edit">
                                         <i class="fa fa-plug"></i>
@@ -108,13 +105,7 @@
             </div>
         </div>
     @endcomponent
-  
-    <div class="row">
-        <div class="col-sm-12 text-center">
-          <button type="button" id="submit_purchase_form" class="tw-dw-btn tw-dw-btn-primary tw-text-white tw-dw-btn-lg">@lang('messages.update')</button>
-        </div>
-    </div>
-{!! Form::close() !!}
+
 
     <div class="modal fade" id="partialReceiveModalSizeLg" tabindex="-1" role="dialog" aria-labelledby="partialReceiveModalSizeLg" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
@@ -126,9 +117,11 @@
                     </button>
                 </div>
 
-                <form id="cardEditForm" method="POST" action="{{route('product.partial.receive.save')}}" enctype="multipart/form-data">
+                <form id="cardEditForm" method="POST" action="{{route('product.partial.receive.save')}}">
                     @csrf
-                    <input type="hidden" name="id" id="edit-id">
+                    <input type="hidden" name="product_id" id="product-id">
+                    <input type="hidden" name="purchase_line_id" id="purchase-line-id">
+                    <input type="hidden" name="transaction_id" id="transaction-id">
                     <div class="card-body" style="padding: 20px;">
                         <div class="row">
                             <div class="col-sm-12">
@@ -173,11 +166,17 @@
 @endsection
 
 @section('javascript')
-  <script src="{{ asset('js/purchase.js?v=' . $asset_v) }}"/>
-  <script src="{{ asset('js/product.js?v=' . $asset_v) }}"/>
-  <script type="text/javascript">
-      $('.partial-receive-modal').on('click', function() {
-          $('#edit-id').val($(this).data('id'));
-      })
-  </script>
+{{--    <script src="{{ asset('js/purchase.js?v=' . $asset_v) }}"/>--}}
+{{--    <script src="{{ asset('js/product.js?v=' . $asset_v) }}"/>--}}
+    <script>
+        $(document).ready(function() {
+            $('.partial-receive').on('click', function() {
+                $('#product-id').val($(this).data('product-id'));
+                $('#purchase-line-id').val($(this).data('purchase-line-id'));
+                $('#transaction-id').val($(this).data('transaction-id'));
+
+                $('#partialReceiveModalSizeLg').modal('show');
+            })
+        });
+    </script>
 @endsection

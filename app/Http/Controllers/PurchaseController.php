@@ -20,6 +20,7 @@ use App\Utils\TransactionUtil;
 use App\Variation;
 use Excel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Yajra\DataTables\Facades\DataTables;
@@ -1666,6 +1667,7 @@ class PurchaseController extends Controller
                 'product_id' => 'required|integer',
                 'received_quantity' => 'required|numeric|min:0.01',
                 'note' => 'nullable|string',
+                'date' => 'required|date',
             ]);
 
             $transaction = Transaction::where('business_id', $business_id)
@@ -1737,7 +1739,7 @@ class PurchaseController extends Controller
                     'purchase_quantity' => $total_purchase_qty,
                     'received_quantity' => $received_qty,
                     'note' => $request->input('note'),
-                    'date' => now(),
+                    'date' => $request->input('date') ? Carbon::parse($request->input('date'))->format('Y-m-d') :  now(),
                 ];
 
                 ProductPartialReceiveHistory::create($history_data);

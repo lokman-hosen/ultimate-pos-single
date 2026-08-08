@@ -91,14 +91,17 @@
                                             data-purchase-line-id="{{ $purchase_line->id }}"
                                             data-product-id="{{ $purchase_line->product->id }}"
                                             title="Edit">
-                                        <i class="fa fa-cart-plus"></i>
+                                        <i class="fa fa-plus"></i>
                                         Partial Rcv
                                     </button>
-                                    <a class="tw-dw-btn tw-dw-btn-warning tw-text-white"
-                                            href="{{route('product.partial.receive.history', $purchase_line->product->id)}}">
-                                        <i class="fa fa-history"></i>
-                                        History
-                                    </a>
+                                    @if($purchase_line->partialReceiveHistories->count() > 0)
+                                        <a class="tw-dw-btn tw-dw-btn-success tw-text-white"
+                                           href="{{route('product.partial.receive.history', $purchase_line->product->id)}}">
+                                            <i class="fa fa-history"></i>
+                                            History
+                                        </a>
+                                    @endif
+
                                 </td>
                             </tr>
                                 <?php $row_count = $loop->index + 1 ; ?>
@@ -130,26 +133,32 @@
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="form-group">
-                                    <div class="form-group">
-                                        <label class="form-control-label">Receive Quantity<span class="text-danger">*</span></label>
-                                        <input type="number" name="received_quantity" class="form-control @error('name') is-invalid @enderror"
-                                               value="{{ old('received_quantity') }}"
-                                               placeholder="Enter partial received quantity" />
-                                        @error('received_quantity')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                    <label class="form-control-label">Receive Quantity<span class="text-danger">*</span></label>
+                                    <input type="number" name="received_quantity" class="form-control @error('name') is-invalid @enderror"
+                                           value="{{ old('received_quantity') }}"
+                                           placeholder="Enter partial received quantity" />
+                                    @error('received_quantity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
 
                             <div class="col-sm-12">
                                 <div class="form-group">
-                                    <div class="form-group">
-                                        <label class="form-control-label">Note</label>
-                                        <input type="text" name="note" class="form-control @error('note') is-invalid @enderror"
-                                               value="{{ old('note') }}"
-                                               placeholder="Enter note for future reference" />
-                                    </div>
+                                    <label class="form-control-label">Receive Date<span class="text-danger">*</span></label>
+                                    <input class="form-control" type="date" name="date">
+                                    @error('received_quantity')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="form-control-label">Note</label>
+                                    <input type="text" name="note" class="form-control @error('note') is-invalid @enderror"
+                                           value="{{ old('note') }}"
+                                           placeholder="Enter note for future reference" />
                                 </div>
                             </div>
 
@@ -176,7 +185,6 @@
         $(document).ready(function() {
             $('.partial-receive').on('click', function() {
                 const transactionId = $(this).data('transaction-id');
-                
                 $('#product-id').val($(this).data('product-id'));
                 $('#purchase-line-id').val($(this).data('purchase-line-id'));
                 

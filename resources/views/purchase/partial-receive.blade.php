@@ -79,10 +79,10 @@
 
                                 <td>{{@format_quantity($purchase_line->quantity)}}</td>
                                 <td class="add_without_price_hide text-info">
-                                    <b>15</b>
+                                    <b>{{ @format_quantity($purchase_line->quantity_received ?? 0) }}</b>
                                 </td>
                                 <td class="add_without_price_hide text-danger">
-                                    <b>100</b>
+                                    <b>{{ @format_quantity(($purchase_line->quantity ?? 0) - ($purchase_line->quantity_received ?? 0)) }}</b>
                                 </td>
 
                                 <td>
@@ -117,11 +117,10 @@
                     </button>
                 </div>
 
-                <form id="cardEditForm" method="POST" action="{{route('product.partial.receive.save')}}">
+                <form id="cardEditForm" method="POST" action="">
                     @csrf
                     <input type="hidden" name="product_id" id="product-id">
                     <input type="hidden" name="purchase_line_id" id="purchase-line-id">
-                    <input type="hidden" name="transaction_id" id="transaction-id">
                     <div class="card-body" style="padding: 20px;">
                         <div class="row">
                             <div class="col-sm-12">
@@ -171,9 +170,14 @@
     <script>
         $(document).ready(function() {
             $('.partial-receive').on('click', function() {
+                const transactionId = $(this).data('transaction-id');
+                
                 $('#product-id').val($(this).data('product-id'));
                 $('#purchase-line-id').val($(this).data('purchase-line-id'));
-                $('#transaction-id').val($(this).data('transaction-id'));
+                
+                // Set the form action to include the transaction_id
+                const formAction = "{{ route('product.partial.receive.save', ['id' => ':id']) }}".replace(':id', transactionId);
+                $('#cardEditForm').attr('action', formAction);
 
                 $('#partialReceiveModalSizeLg').modal('show');
             })

@@ -214,7 +214,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::post('/purchases/get_purchase_entry_row', [PurchaseController::class, 'getPurchaseEntryRow']);
     Route::post('/purchases/check_ref_number', [PurchaseController::class, 'checkRefNumber']);
     Route::get('/purchases/partial-receive/{id}', [PurchaseController::class, 'partialReceive'])->name('product.partial.receive');
-    Route::post('/purchases/partial-receive', [PurchaseController::class, 'partialReceiveStore'])->name('product.partial.receive.save');;
+    Route::post('/purchases/partial-receive/{id}', [PurchaseController::class, 'partialReceiveStore'])->name('product.partial.receive.save');;
     Route::resource('purchases', PurchaseController::class)->except(['show']);
 
     Route::get('/toggle-subscription/{id}', [SellPosController::class, 'toggleRecurringInvoices']);

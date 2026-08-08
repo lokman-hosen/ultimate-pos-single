@@ -1672,4 +1672,10 @@ return [
     'enter_customer_name_phone' => 'Enter Customer name / phone',
     'cart_is_empty' => 'Your cart is empty',
     'cart_is_empty_hint' => 'Scan a barcode, tap a product tile, or type to search.',
+
+    // Partial Receive translations
+    'partial_received' => 'Partially Received',
+    'partial_receive_success' => 'Partial receive recorded successfully',
+    'quantity_exceeds_remaining' => 'Received quantity (:received) exceeds remaining quantity (:remaining)',
+    'invalid_quantity' => 'Invalid quantity. Please enter a quantity greater than 0',
 ];

@@ -82,4 +82,12 @@ class PurchaseLine extends Model
     {
         return $this->belongsTo(\App\PurchaseLine::class, 'purchase_requisition_line_id');
     }
+
+    /**
+     * Get the partial receive histories for this purchase line.
+     */
+    public function partialReceiveHistories()
+    {
+        return $this->hasMany(\App\ProductPartialReceiveHistory::class);
+    }
 }

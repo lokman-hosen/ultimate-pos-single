@@ -1826,4 +1826,13 @@ class PurchaseController extends Controller
             return $transaction->status;
         }
     }
+
+    public function partialReceiveHistory($productId)
+    {
+        $this->authorize('product.partial.receive.history');
+        $business_id = request()->session()->get('user.business_id');
+        $product = Product::where('business_id', $business_id)->where('id', $productId)->first();
+        $partialReceiveHistories = ProductPartialReceiveHistory::where('product_id', $product->id)->with('user')->get();
+        return view('purchase.partial-receive-history', compact('partialReceiveHistories', 'product'));
+    }
 }

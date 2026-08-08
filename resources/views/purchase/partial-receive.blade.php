@@ -67,9 +67,9 @@
                         </thead>
                         <tbody>
                         <?php $row_count = 0; ?>
-                        @foreach($purchase->purchase_lines as $purchase_line)
+                        @foreach($purchase->purchase_lines as $key => $purchase_line)
                             <tr @if(!empty($purchase_line->purchase_order_line) && !empty($common_settings['enable_purchase_order'])) data-purchase_order_id="{{$purchase_line->purchase_order_line->transaction_id}}" @endif  @if(!empty($purchase_line->purchase_requisition_line) && !empty($common_settings['enable_purchase_requisition'])) data-purchase_requisition_id="{{$purchase_line->purchase_requisition_line->transaction_id}}" @endif>
-                                <td><span class="sr_number"></span></td>
+                                <td><span class="sr_number">{{$key+1}}</span></td>
                                 <td>
                                     {{ $purchase_line->product->name }} ({{$purchase_line->variations->sub_sku}})
                                     @if( $purchase_line->product->type == 'variable')
@@ -91,9 +91,14 @@
                                             data-purchase-line-id="{{ $purchase_line->id }}"
                                             data-product-id="{{ $purchase_line->product->id }}"
                                             title="Edit">
-                                        <i class="fa fa-plug"></i>
+                                        <i class="fa fa-cart-plus"></i>
                                         Partial Rcv
                                     </button>
+                                    <a class="tw-dw-btn tw-dw-btn-warning tw-text-white"
+                                            href="{{route('product.partial.receive.history', $purchase_line->product->id)}}">
+                                        <i class="fa fa-history"></i>
+                                        History
+                                    </a>
                                 </td>
                             </tr>
                                 <?php $row_count = $loop->index + 1 ; ?>

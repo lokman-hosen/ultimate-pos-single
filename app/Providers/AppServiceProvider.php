@@ -155,6 +155,8 @@ class AppServiceProvider extends ServiceProvider
                 echo 'bg-aqua';
             }elseif($status == 'pending'){
                 echo 'bg-red';
+            }elseif($status == 'partial_received'){
+                echo 'bg-aqua';
             }elseif ($status == 'received') {
                 echo 'bg-light-green';
             }?>";

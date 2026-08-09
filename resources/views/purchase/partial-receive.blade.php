@@ -90,6 +90,7 @@
                                             data-transaction-id="{{ $purchase->id }}"
                                             data-purchase-line-id="{{ $purchase_line->id }}"
                                             data-product-id="{{ $purchase_line->product->id }}"
+                                            data-product-name="{{ $purchase_line->product->name }}"
                                             title="Edit">
                                         <i class="fa fa-plus"></i>
                                         Partial Rcv
@@ -126,6 +127,9 @@
                 </div>
 
                 <form id="cardEditForm" method="POST" action="">
+                    <h4  style="margin-left: 20px;">Procuct Name:
+                        <span id="product-name"></span>
+                    </h4>
                     @csrf
                     <input type="hidden" name="product_id" id="product-id">
                     <input type="hidden" name="purchase_line_id" id="purchase-line-id">
@@ -187,7 +191,8 @@
                 const transactionId = $(this).data('transaction-id');
                 $('#product-id').val($(this).data('product-id'));
                 $('#purchase-line-id').val($(this).data('purchase-line-id'));
-                
+                $('#product-name').text($(this).data('product-name'));
+
                 // Set the form action to include the transaction_id
                 const formAction = "{{ route('product.partial.receive.save', ['id' => ':id']) }}".replace(':id', transactionId);
                 $('#cardEditForm').attr('action', formAction);

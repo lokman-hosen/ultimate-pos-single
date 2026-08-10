@@ -244,6 +244,8 @@ class ContactUtil extends Util
         $query->select([
             'contacts.*',
             'cg.name as customer_group',
+            DB::raw("SUM(IF(t.type = 'opening_balance' AND (t.balance_type IS NULL OR t.balance_type = 'due'), final_total, 0)) as opening_balance_due"),
+            DB::raw("SUM(IF(t.type = 'opening_balance' AND t.balance_type = 'advance', final_total, 0)) as opening_balance_advance"),
             DB::raw("SUM(IF(t.type = 'opening_balance', final_total, 0)) as opening_balance"),
             DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid"),
             DB::raw('MAX(DATE(transaction_date)) as max_transaction_date'),

@@ -1296,12 +1296,14 @@ class Util
             ->join('transactions AS t', 'contacts.id', '=', 't.contact_id')
             ->whereIn('t.type', ['sell', 'opening_balance', 'purchase', 'sell_return'])
             ->select(
+                'contacts.type',
                 DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', final_total, 0)) as total_invoice"),
                 DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
                 DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
                 DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as purchase_paid"),
                 DB::raw("SUM(IF(t.type = 'sell_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as sell_return_paid"),
-                DB::raw("SUM(IF(t.type = 'opening_balance', final_total, 0)) as opening_balance"),
+                DB::raw("SUM(IF(t.type = 'opening_balance' AND (t.balance_type IS NULL OR t.balance_type = 'due'), final_total, 0)) as opening_balance_due"),
+                DB::raw("SUM(IF(t.type = 'opening_balance' AND t.balance_type = 'advance', final_total, 0)) as opening_balance_advance"),
                 DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
                 DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid")
             );
@@ -1312,8 +1314,10 @@ class Util
         $contact_payments = $query->first();
 
         // + $contact_payments->sell_return_paid add this in due because after paymnet for sell return not calculated 
+        // Handle opening_balance based on balance_type and contact type
+        $opening_balance_adjustment = $contact_payments->opening_balance_due - $contact_payments->opening_balance_advance;
 
-        $due = $contact_payments->total_invoice + $contact_payments->total_purchase - $contact_payments->total_paid - $contact_payments->purchase_paid + $contact_payments->opening_balance - $contact_payments->opening_balance_paid - $contact_payments->total_sell_return + $contact_payments->sell_return_paid;
+        $due = $contact_payments->total_invoice + $contact_payments->total_purchase - $contact_payments->total_paid - $contact_payments->purchase_paid + $opening_balance_adjustment - $contact_payments->opening_balance_paid - $contact_payments->total_sell_return + $contact_payments->sell_return_paid;
 
         return $due;
     }

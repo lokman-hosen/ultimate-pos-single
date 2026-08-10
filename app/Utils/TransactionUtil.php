@@ -5307,6 +5307,8 @@ class TransactionUtil extends Util
                     DB::raw("SUM(IF(type = 'sell' AND status = 'final', final_total, 0)) as total_invoice"),
                     DB::raw("SUM(IF(type = 'sell_return', final_total, 0)) as total_sell_return"),
                     DB::raw("SUM(IF(type = 'purchase_return', final_total, 0)) as total_purchase_return"),
+                    DB::raw("SUM(IF(type = 'opening_balance' AND (balance_type IS NULL OR balance_type = 'due'), final_total, 0)) as total_opening_balance_due"),
+                    DB::raw("SUM(IF(type = 'opening_balance' AND balance_type = 'advance', final_total, 0)) as total_opening_balance_advance"),
                     DB::raw("SUM(IF(type = 'opening_balance', final_total, 0)) as total_opening_balance"),
                     DB::raw("SUM(IF(type = 'ledger_discount', final_total, 0)) as total_ledger_discount")
                 )->first();
@@ -5339,7 +5341,8 @@ class TransactionUtil extends Util
 
         $total_prev_paid = $prev_total_invoice_paid + $prev_total_purchase_paid - $prev_total_sell_return_paid - $prev_total_purchase_return_paid + $prev_total_ob_paid + $prev_total_advance_payment;
 
-        $total_prev_invoice = $previous_transaction_sums->total_purchase + $previous_transaction_sums->total_invoice - $previous_transaction_sums->total_sell_return - $previous_transaction_sums->total_purchase_return + $previous_transaction_sums->total_opening_balance - $previous_transaction_sums->total_ledger_discount;
+        $opening_balance_net = $previous_transaction_sums->total_opening_balance_due - $previous_transaction_sums->total_opening_balance_advance;
+        $total_prev_invoice = $previous_transaction_sums->total_purchase + $previous_transaction_sums->total_invoice - $previous_transaction_sums->total_sell_return - $previous_transaction_sums->total_purchase_return + $opening_balance_net - $previous_transaction_sums->total_ledger_discount;
         //$total_prev_paid = $prev_payments_sum->total_paid;
         $beginning_balance = $total_prev_invoice - $total_prev_paid;
 
@@ -5368,14 +5371,20 @@ class TransactionUtil extends Util
         $transaction_types = Transaction::transactionTypes();
         $ledger = [];
 
-        $opening_balance = 0;
+        $opening_balance_due = 0;
+        $opening_balance_advance = 0;
         $opening_balance_paid = 0;
         $ledger_discount = 0;
 
         foreach ($transactions as $transaction) {
             if ($transaction->type == 'opening_balance') {
                 //Skip opening balance, it will be added in the end
-                $opening_balance += $transaction->final_total;
+                if ($transaction->balance_type == 'advance') {
+                    $opening_balance_advance += $transaction->final_total;
+                } else {
+                    //NULL and 'due' are treated as due
+                    $opening_balance_due += $transaction->final_total;
+                }
 
                 continue;
             }
@@ -5533,13 +5542,13 @@ class TransactionUtil extends Util
         $total_invoice = $invoice_sum - $sell_return_sum + $hms_booking_sum + $gym_subscription_sum;
         $total_purchase = $purchase_sum - $purchase_return_sum;
 
-        $opening_balance_due = $opening_balance;
+        $opening_balance_net = $opening_balance_due - $opening_balance_advance;
 
         $total_paid = $total_invoice_paid + $total_purchase_paid - $total_sell_return_paid - $total_purchase_return_paid + $total_excess_advance_payment - $total_advance_payment;
 
         $total_transactions_paid = $total_invoice_paid + $total_purchase_paid - $total_sell_return_paid - $total_purchase_return_paid;
 
-        $curr_due = $total_invoice + $total_purchase - $total_transactions_paid + $beginning_balance + $opening_balance_due;
+        $curr_due = $total_invoice + $total_purchase - $total_transactions_paid + $beginning_balance + $opening_balance_net;
 
         //Sort by date
         if (! empty($ledger)) {
@@ -5551,9 +5560,26 @@ class TransactionUtil extends Util
             });
         }
 
-        $total_opening_bal = $beginning_balance + $opening_balance_due;
+        $total_opening_bal = $beginning_balance + $opening_balance_net;
         if ($format != 'format_2') {
             //Add Beginning balance & openining balance to ledger
+            $ledger_debit = '';
+            $ledger_credit = '';
+            
+            if ($contact->type == 'customer') {
+                //For customer: due is debit, advance is credit
+                $ledger_debit = $opening_balance_due > 0 ? abs($beginning_balance + $opening_balance_due) : abs($beginning_balance);
+                $ledger_credit = $opening_balance_advance > 0 ? abs($opening_balance_advance) : '';
+            } elseif ($contact->type == 'supplier') {
+                //For supplier: due is credit, advance is debit
+                $ledger_credit = $opening_balance_due > 0 ? abs($beginning_balance + $opening_balance_due) : abs($beginning_balance);
+                $ledger_debit = $opening_balance_advance > 0 ? abs($opening_balance_advance) : '';
+            } else {
+                //For 'both' type
+                $ledger_debit = $total_opening_bal < 0 ? abs($total_opening_bal) : '';
+                $ledger_credit = $total_opening_bal > 0 ? abs($total_opening_bal) : '';
+            }
+            
             $ledger = array_merge([[
                 'date' => $start,
                 'ref_no' => '',
@@ -5562,8 +5588,8 @@ class TransactionUtil extends Util
                 'payment_status' => '',
                 'total' => '',
                 'payment_method' => '',
-                'debit' => $contact->type == 'customer' ? abs($total_opening_bal) : '',
-                'credit' => $contact->type == 'supplier' ? abs($total_opening_bal) : '',
+                'debit' => $ledger_debit,
+                'credit' => $ledger_credit,
                 'others' => '',
                 'final_total' => abs($total_opening_bal),
                 'total_due' => 0,
@@ -5604,12 +5630,15 @@ class TransactionUtil extends Util
                     DB::raw("SUM(IF(type = 'sell' AND status = 'final', final_total, 0)) as total_invoice"),
                     DB::raw("SUM(IF(type = 'sell_return', final_total, 0)) as total_sell_return"),
                     DB::raw("SUM(IF(type = 'purchase_return', final_total, 0)) as total_purchase_return"),
+                    DB::raw("SUM(IF(type = 'opening_balance' AND (balance_type IS NULL OR balance_type = 'due'), final_total, 0)) as total_opening_balance_due"),
+                    DB::raw("SUM(IF(type = 'opening_balance' AND balance_type = 'advance', final_total, 0)) as total_opening_balance_advance"),
                     DB::raw("SUM(IF(type = 'opening_balance', final_total, 0)) as total_opening_balance"),
                     DB::raw("SUM(IF(type = 'ledger_discount', final_total, 0)) as total_ledger_discount"),
                     DB::raw("SUM(IF(type = 'hms_booking', final_total, 0)) as total_hms_booking"),
                     DB::raw("SUM(IF(type = 'gym_subscription', final_total, 0)) as total_gym_subscription")
                 )->first();
-        $total_overall_invoice = $overall_transaction_sums->total_invoice - $overall_transaction_sums->total_sell_return + $overall_transaction_sums->total_opening_balance - $overall_transaction_sums->total_ledger_discount + $overall_transaction_sums->total_hms_booking + $overall_transaction_sums->total_gym_subscription;
+        $overall_opening_balance_net = $overall_transaction_sums->total_opening_balance_due - $overall_transaction_sums->total_opening_balance_advance;
+        $total_overall_invoice = $overall_transaction_sums->total_invoice - $overall_transaction_sums->total_sell_return + $overall_opening_balance_net - $overall_transaction_sums->total_ledger_discount + $overall_transaction_sums->total_hms_booking + $overall_transaction_sums->total_gym_subscription;
 
         $total_overall_purchase = $overall_transaction_sums->total_purchase - $overall_transaction_sums->total_purchase_return;
         $overall_ledger_discount = $overall_transaction_sums->total_ledger_discount;

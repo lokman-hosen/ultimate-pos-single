@@ -243,7 +243,6 @@
           </div>
         </div>
 
-        
         <div class="col-md-4 opening_balance">
           <div class="form-group">
               {!! Form::label('opening_balance', __('lang_v1.opening_balance') . ':') !!}
@@ -253,6 +252,13 @@
                   </span>
                   {!! Form::text('opening_balance', $opening_balance, ['class' => 'form-control input_number']); !!}
               </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="form-group">
+              {!! Form::label('balance_type', __('lang_v1.balance_type') . ':') !!}
+              {!! Form::select('balance_type', ['due' => __('lang_v1.due'), 'advance' => __('lang_v1.advance')], isset($balance_type) ? $balance_type : 'due', ['class' => 'form-control']); !!}
           </div>
         </div>
 

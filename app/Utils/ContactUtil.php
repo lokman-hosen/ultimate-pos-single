@@ -110,6 +110,11 @@ class ContactUtil extends Util
                 unset($input['opening_balance']);
             }
 
+            $balance_type = isset($input['balance_type']) ? $input['balance_type'] : 'due';
+            if (isset($input['balance_type'])) {
+                unset($input['balance_type']);
+            }
+
             //Assigned the user
             $assigned_to_users = [];
             if (! empty($input['assigned_to_users'])) {
@@ -127,7 +132,7 @@ class ContactUtil extends Util
             //Add opening balance
             if (! empty($opening_balance)) {
                 $transactionUtil = new TransactionUtil();
-                $transactionUtil->createOpeningBalanceTransaction($contact->business_id, $contact->id, $opening_balance, $contact->created_by, false);
+                $transactionUtil->createOpeningBalanceTransaction($contact->business_id, $contact->id, $opening_balance, $contact->created_by, false, $balance_type);
             }
 
             $output = ['success' => true,
@@ -163,6 +168,11 @@ class ContactUtil extends Util
                 unset($input['opening_balance']);
             }
 
+            $balance_type = isset($input['balance_type']) ? $input['balance_type'] : 'due';
+            if (isset($input['balance_type'])) {
+                unset($input['balance_type']);
+            }
+
             //Assigned the user
             $assigned_to_users = [];
             if (! empty($input['assigned_to_users'])) {
@@ -190,13 +200,14 @@ class ContactUtil extends Util
                 }
 
                 $ob_transaction->final_total = $opening_balance;
+                $ob_transaction->balance_type = $balance_type;
                 $ob_transaction->save();
                 //Update opening balance payment status
                 $transactionUtil->updatePaymentStatus($ob_transaction->id, $ob_transaction->final_total);
             } else {
                 //Add opening balance
                 if (! empty($opening_balance)) {
-                    $transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $contact->created_by, false);
+                    $transactionUtil->createOpeningBalanceTransaction($business_id, $contact->id, $opening_balance, $contact->created_by, false, $balance_type);
                 }
             }
 

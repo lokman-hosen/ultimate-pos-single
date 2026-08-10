@@ -146,6 +146,8 @@ return [
     'bank_account_number' => 'Bank Account No',
     'paid' => 'Paid',
     'due' => 'Due',
+    'advance' => 'Advance',
+    'balance_type' => 'Balance Type',
     'partial' => 'Partial',
     'no_of_products' => 'Number of products',
     'select_a_date_range' => 'Select a date range',

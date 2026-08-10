@@ -630,6 +630,7 @@ class ContactController extends Controller
 
             $input['credit_limit'] = $request->input('credit_limit') != '' ? $this->commonUtil->num_uf($request->input('credit_limit')) : null;
             $input['opening_balance'] = $this->commonUtil->num_uf($request->input('opening_balance'));
+            $input['balance_type'] = $request->input('balance_type', 'due');
 
             DB::beginTransaction();
             $output = $this->contactUtil->createNewContact($input);
@@ -745,6 +746,7 @@ class ContactController extends Controller
                                             ->where('type', 'opening_balance')
                                             ->first();
             $opening_balance = ! empty($ob_transaction->final_total) ? $ob_transaction->final_total : 0;
+            $balance_type = ! empty($ob_transaction) ? ($ob_transaction->balance_type ?? 'due') : 'due';
 
             //Deduct paid amount from opening balance.
             if (! empty($opening_balance)) {
@@ -760,7 +762,7 @@ class ContactController extends Controller
             $users = config('constants.enable_contact_assign') ? User::forDropdown($business_id, false, false, false, true) : [];
 
             return view('contact.edit')
-                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'users'));
+                ->with(compact('contact', 'types', 'customer_groups', 'opening_balance', 'balance_type', 'users'));
         }
     }
 
@@ -818,6 +820,7 @@ class ContactController extends Controller
                 $business_id = $request->session()->get('user.business_id');
 
                 $input['opening_balance'] = $this->commonUtil->num_uf($request->input('opening_balance'));
+                $input['balance_type'] = $request->input('balance_type', 'due');
 
                 if (! $this->moduleUtil->isSubscribed($business_id)) {
                     return $this->moduleUtil->expiredResponse();

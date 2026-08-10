@@ -4301,7 +4301,7 @@ class TransactionUtil extends Util
      * @param  int  $amount
      * @return void
      */
-    public function createOpeningBalanceTransaction($business_id, $contact_id, $amount, $created_by, $uf_data = true)
+    public function createOpeningBalanceTransaction($business_id, $contact_id, $amount, $created_by, $uf_data = true, $balance_type = 'due')
     {
         $business_location = BusinessLocation::where('business_id', $business_id)
                                                         ->first();
@@ -4310,6 +4310,7 @@ class TransactionUtil extends Util
             'business_id' => $business_id,
             'location_id' => $business_location->id,
             'type' => 'opening_balance',
+            'balance_type' => $balance_type,
             'status' => 'final',
             'payment_status' => 'due',
             'contact_id' => $contact_id,

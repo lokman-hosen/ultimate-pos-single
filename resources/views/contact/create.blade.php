@@ -260,6 +260,13 @@
                   </div>
                 </div>
 
+                <div class="col-md-4">
+                  <div class="form-group">
+                      {!! Form::label('balance_type', __('lang_v1.balance_type') . ':') !!}
+                      {!! Form::select('balance_type', ['due' => __('lang_v1.due'), 'advance' => __('lang_v1.advance')], 'due', ['class' => 'form-control']); !!}
+                  </div>
+                </div>
+
                 <div class="col-md-4 pay_term">
                   <div class="form-group">
                     <div class="multi-input">

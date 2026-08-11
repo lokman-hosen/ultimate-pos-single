@@ -5301,8 +5301,7 @@ class TransactionUtil extends Util
     {
         $business_id = request()->session()->get('user.business_id');
         //Get sum of totals before start date
-        $previous_transaction_sums = $this->__transactionQuery($contact_id, $start, null, $location_id)
-                ->select(
+        $previous_transaction_sums = $this->__transactionQuery($contact_id, $start, null, $location_id)->select(
                     DB::raw("SUM(IF(type = 'purchase', final_total, 0)) as total_purchase"),
                     DB::raw("SUM(IF(type = 'sell' AND status = 'final', final_total, 0)) as total_invoice"),
                     DB::raw("SUM(IF(type = 'sell_return', final_total, 0)) as total_sell_return"),
@@ -5312,6 +5311,7 @@ class TransactionUtil extends Util
                     DB::raw("SUM(IF(type = 'opening_balance', final_total, 0)) as total_opening_balance"),
                     DB::raw("SUM(IF(type = 'ledger_discount', final_total, 0)) as total_ledger_discount")
                 )->first();
+
 
         //Get payment totals before start date
         $prev_payments = $this->__paymentQuery($contact_id, $start, null, $location_id)
@@ -5341,7 +5341,9 @@ class TransactionUtil extends Util
 
         $total_prev_paid = $prev_total_invoice_paid + $prev_total_purchase_paid - $prev_total_sell_return_paid - $prev_total_purchase_return_paid + $prev_total_ob_paid + $prev_total_advance_payment;
 
-        $opening_balance_net = $previous_transaction_sums->total_opening_balance_due - $previous_transaction_sums->total_opening_balance_advance;
+        //$opening_balance_net = $previous_transaction_sums->total_opening_balance_due - $previous_transaction_sums->total_opening_balance_advance;
+        $opening_balance_net = $previous_transaction_sums->total_opening_balance_due + $previous_transaction_sums->total_opening_balance_advance;
+        //$opening_balance_net = $previous_transaction_sums->total_opening_balance_advance;
         $total_prev_invoice = $previous_transaction_sums->total_purchase + $previous_transaction_sums->total_invoice - $previous_transaction_sums->total_sell_return - $previous_transaction_sums->total_purchase_return + $opening_balance_net - $previous_transaction_sums->total_ledger_discount;
         //$total_prev_paid = $prev_payments_sum->total_paid;
         $beginning_balance = $total_prev_invoice - $total_prev_paid;
@@ -5542,7 +5544,7 @@ class TransactionUtil extends Util
         $total_invoice = $invoice_sum - $sell_return_sum + $hms_booking_sum + $gym_subscription_sum;
         $total_purchase = $purchase_sum - $purchase_return_sum;
 
-        $opening_balance_net = $opening_balance_due - $opening_balance_advance;
+        $opening_balance_net = $opening_balance_due + $opening_balance_advance;
 
         $total_paid = $total_invoice_paid + $total_purchase_paid - $total_sell_return_paid - $total_purchase_return_paid + $total_excess_advance_payment - $total_advance_payment;
 
@@ -5637,7 +5639,9 @@ class TransactionUtil extends Util
                     DB::raw("SUM(IF(type = 'hms_booking', final_total, 0)) as total_hms_booking"),
                     DB::raw("SUM(IF(type = 'gym_subscription', final_total, 0)) as total_gym_subscription")
                 )->first();
-        $overall_opening_balance_net = $overall_transaction_sums->total_opening_balance_due - $overall_transaction_sums->total_opening_balance_advance;
+
+        //$overall_opening_balance_net = $overall_transaction_sums->total_opening_balance_due - $overall_transaction_sums->total_opening_balance_advance;
+        $overall_opening_balance_net = $overall_transaction_sums->total_opening_balance_due + $overall_transaction_sums->total_opening_balance_advance;
         $total_overall_invoice = $overall_transaction_sums->total_invoice - $overall_transaction_sums->total_sell_return + $overall_opening_balance_net - $overall_transaction_sums->total_ledger_discount + $overall_transaction_sums->total_hms_booking + $overall_transaction_sums->total_gym_subscription;
 
         $total_overall_purchase = $overall_transaction_sums->total_purchase - $overall_transaction_sums->total_purchase_return;

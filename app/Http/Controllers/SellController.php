@@ -746,11 +746,11 @@ class SellController extends Controller
         }
 
         $sell = $query->firstOrFail();
-
         $activities = Activity::forSubject($sell)
            ->with(['causer', 'subject'])
            ->latest()
            ->get();
+        //dd($activities);
 
         $line_taxes = [];
         foreach ($sell->sell_lines as $key => $value) {
@@ -1192,7 +1192,7 @@ class SellController extends Controller
 
             $is_woocommerce = $this->moduleUtil->isModuleInstalled('Woocommerce');
 
-            $sells = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
+            $sells = Transaction::with('payment_lines')->leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                 ->leftJoin('users as u', 'transactions.created_by', '=', 'u.id')
                 ->join(
                     'business_locations AS bl',
@@ -1271,6 +1271,23 @@ class SellController extends Controller
             }
 
             $sells->groupBy('transactions.id');
+            $filteredIds = (clone $sells)->pluck('transactions.id')->toArray();
+
+            $totalSum = 0;
+            if (!empty($filteredIds)) {
+                $activities = Activity::where('subject_type', Transaction::class)
+                    ->whereIn('subject_id', $filteredIds)
+                    ->orderBy('created_at', 'desc')
+                    ->get(['subject_id', 'properties'])
+                    ->groupBy('subject_id')
+                    ->map(function ($items) {
+                        // Take the latest activity (first because ordered desc)
+                        return $items->first()->properties['final_total'] ?? 0;
+                    });
+
+                $totalSum = $activities->sum();
+            }
+
 
             return Datatables::of($sells)
                  ->addColumn(
@@ -1377,6 +1394,13 @@ class SellController extends Controller
                 ->editColumn('total_items', '{{@format_quantity($total_items)}}')
                 ->editColumn('total_quantity', '{{@format_quantity($total_quantity)}}')
                 ->addColumn('conatct_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br>@endif {{$name}}')
+                ->addColumn('total_amount', function ($row) {
+                    $final_total = Activity::forSubject($row)
+                        ->with(['causer', 'subject'])
+                        ->latest()->first()
+                        ->properties->first()['final_total'] ?? 0;
+                    return number_format($final_total, 2);
+                })
                 ->filterColumn('conatct_name', function ($query, $keyword) {
                     $query->where(function ($q) use ($keyword) {
                         $q->where('contacts.name', 'like', "%{$keyword}%")
@@ -1395,6 +1419,7 @@ class SellController extends Controller
                         }
                     }, ])
                 ->rawColumns(['action', 'invoice_no', 'transaction_date', 'conatct_name'])
+                ->with('total_amount_sum', number_format($totalSum, 2))
                 ->make(true);
         }
     }

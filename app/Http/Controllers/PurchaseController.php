@@ -1675,32 +1675,43 @@ class PurchaseController extends Controller
                 ->with(['purchase_lines', 'location'])
                 ->firstOrFail();
 
-            // Get the specific purchase line
+            // Get the specific purchase line with product and variation
             $purchase_line = PurchaseLine::where('id', $request->input('purchase_line_id'))
                 ->where('transaction_id', $transaction->id)
                 ->where('product_id', $request->input('product_id'))
+                ->with(['product', 'variations'])
                 ->firstOrFail();
 
             $received_qty = $this->productUtil->num_uf($request->input('received_quantity'));
             $currency_details = $this->transactionUtil->purchaseCurrencyDetails($business_id);
 
-            // Calculate remaining quantity available to receive
+            // --- Sub-unit handling ---
+            $multiplier = 1;
+            if (! empty($purchase_line->sub_unit_id)) {
+                $sub_unit = \App\Unit::find($purchase_line->sub_unit_id);
+                if (! empty($sub_unit)) {
+                    $multiplier = $sub_unit->base_unit_multiplier;
+                }
+            }
+            $received_qty_base = $received_qty * $multiplier;
+
+            // --- Calculate available quantity ---
             $already_received = (float) $purchase_line->quantity_received;
             $total_purchase_qty = (float) $purchase_line->quantity;
             $remaining_qty = $total_purchase_qty - $already_received;
 
-            // Validate the received quantity
-            if ($received_qty > $remaining_qty) {
+            // Validate received quantity (in base unit)
+            if ($received_qty_base > $remaining_qty) {
                 return back()->with('status', [
                     'success' => 0,
                     'msg' => __('lang_v1.quantity_exceeds_remaining', [
-                        'remaining' => $this->productUtil->num_f($remaining_qty),
+                        'remaining' => $this->productUtil->num_f($remaining_qty / $multiplier),
                         'received' => $this->productUtil->num_f($received_qty),
                     ]),
                 ]);
             }
 
-            if ($received_qty <= 0) {
+            if ($received_qty_base <= 0) {
                 return back()->with('status', [
                     'success' => 0,
                     'msg' => __('lang_v1.invalid_quantity'),
@@ -1710,59 +1721,73 @@ class PurchaseController extends Controller
             DB::beginTransaction();
 
             try {
-                // Lock the purchase line for update to prevent race conditions
+                // Lock the purchase line to prevent race conditions
                 $purchase_line = PurchaseLine::lockForUpdate()
                     ->where('id', $purchase_line->id)
                     ->first();
 
-                // Recalculate remaining quantity after lock
+                // Recalculate after lock
                 $already_received = (float) $purchase_line->quantity_received;
                 $remaining_qty = $total_purchase_qty - $already_received;
 
-                if ($received_qty > $remaining_qty) {
+                if ($received_qty_base > $remaining_qty) {
                     DB::rollBack();
                     return back()->with('status', [
                         'success' => 0,
                         'msg' => __('lang_v1.quantity_exceeds_remaining', [
-                            'remaining' => $this->productUtil->num_f($remaining_qty),
+                            'remaining' => $this->productUtil->num_f($remaining_qty / $multiplier),
                             'received' => $this->productUtil->num_f($received_qty),
                         ]),
                     ]);
                 }
 
-                // Create partial receive history record
+                // --- Save partial receive history ---
                 $history_data = [
                     'transaction_id' => $transaction->id,
                     'product_id' => $purchase_line->product_id,
                     'purchase_line_id' => $purchase_line->id,
                     'user_id' => $user_id,
                     'purchase_quantity' => $total_purchase_qty,
-                    'received_quantity' => $received_qty,
+                    'received_quantity' => $received_qty_base,
                     'note' => $request->input('note'),
-                    'date' => $request->input('date') ? Carbon::parse($request->input('date'))->format('Y-m-d') :  now(),
+                    'date' => $request->input('date') ? Carbon::parse($request->input('date'))->format('Y-m-d') : now(),
                 ];
-
                 ProductPartialReceiveHistory::create($history_data);
 
-                // Update the quantity_received in purchase_line
-                $new_total_received = $already_received + $received_qty;
+                // --- Update purchase_line quantity_received ---
+                $new_total_received = $already_received + $received_qty_base;
                 $purchase_line->quantity_received = $new_total_received;
                 $purchase_line->save();
 
-                // Update product stock (only for the newly received quantity)
-                // This follows the same logic as updateProductQuantity in ProductUtil
+                // --- Update product stock (same logic as store/update) ---
                 $this->productUtil->updateProductQuantity(
                     $transaction->location_id,
                     $purchase_line->product_id,
                     $purchase_line->variation_id,
-                    $this->productUtil->num_f($received_qty),
-                    0,
+                    $received_qty_base,   // new quantity (in base unit)
+                    0,                    // old quantity (0 because we're adding)
                     $currency_details
                 );
 
-                // Recalculate purchase status based on all purchase lines
-                $purchase_status = $this->calculatePurchaseStatus($transaction);
-                $transaction->update(['status' => $purchase_status]);
+                // --- Adjust stock over selling (map sells to this purchase) ---
+                $this->productUtil->adjustStockOverSelling($transaction);
+
+                // --- Recalculate and update purchase status ---
+                $new_status = $this->calculatePurchaseStatus($transaction);
+                if ($transaction->status != $new_status) {
+                    $transaction->update(['status' => $new_status]);
+                }
+
+                // --- Update linked purchase orders if any ---
+                if (! empty($transaction->purchase_order_ids)) {
+                    $this->transactionUtil->updatePurchaseOrderStatus($transaction->purchase_order_ids);
+                }
+
+                // --- Update payment status (in case final total changed) ---
+                $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
+
+                // --- Log activity ---
+                $this->transactionUtil->activityLog($transaction, 'partial_received');
 
                 DB::commit();
 
@@ -1770,16 +1795,19 @@ class PurchaseController extends Controller
                     'success' => 1,
                     'msg' => __('lang_v1.partial_receive_success'),
                 ];
+
             } catch (\Exception $e) {
                 DB::rollBack();
                 throw $e;
             }
+
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
 
             $output = [
                 'success' => 0,
-                'msg' => __('messages.something_went_wrong'),
+                'msg' => __('messages.something_went_wrong').': '.$e->getMessage(),
             ];
 
             return back()->with('status', $output);
@@ -1789,14 +1817,13 @@ class PurchaseController extends Controller
     }
 
     /**
-     * Calculate the appropriate status for a purchase based on its products' received quantities
+     * Calculate purchase status based on received quantities of all purchase lines
      *
      * @param  Transaction  $transaction
-     * @return string  status
+     * @return string
      */
     private function calculatePurchaseStatus($transaction)
     {
-        // Get all purchase lines for this transaction
         $purchase_lines = PurchaseLine::where('transaction_id', $transaction->id)->get();
 
         if ($purchase_lines->isEmpty()) {
@@ -1805,26 +1832,28 @@ class PurchaseController extends Controller
 
         $all_fully_received = true;
         $at_least_one_received = false;
+        $all_zero_received = true;
 
         foreach ($purchase_lines as $line) {
-            $received_qty = (float) $line->quantity_received;
-            $total_qty = (float) $line->quantity;
+            $received = (float) $line->quantity_received;
+            $total = (float) $line->quantity;
 
-            if ($received_qty > 0) {
+            if ($received > 0) {
                 $at_least_one_received = true;
+                $all_zero_received = false;
             }
 
-            if ($received_qty < $total_qty) {
+            if ($received < $total) {
                 $all_fully_received = false;
             }
         }
 
-        // Determine status based on received quantities
-        if ($all_fully_received) {
+        if ($all_fully_received && !$all_zero_received) {
             return 'received';
         } elseif ($at_least_one_received) {
             return 'partial_received';
         } else {
+            // No line has been received yet – keep original status
             return $transaction->status;
         }
     }

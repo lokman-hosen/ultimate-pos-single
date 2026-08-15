@@ -578,6 +578,8 @@ class SellPosController extends Controller
                         $this->transactionUtil->updateCustomerRewardPoints($contact_id, $transaction->rp_earned, 0, $redeemed);
                     }
 
+
+
                     //Allocate the quantity from purchase and add mapping of
                     //purchase & sell lines in
                     //transaction_sell_lines_purchase_lines table
@@ -601,6 +603,7 @@ class SellPosController extends Controller
 
                 }
 
+
                 if (!empty($transaction->sales_order_ids)) {
                     $this->transactionUtil->updateSalesOrderStatus($transaction->sales_order_ids);
                 }
@@ -611,7 +614,6 @@ class SellPosController extends Controller
 
                 $this->transactionUtil->activityLog($transaction, 'added');
 
-                
 
                 DB::commit();
 

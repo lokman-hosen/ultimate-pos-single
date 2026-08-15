@@ -1477,31 +1477,34 @@ class ProductUtil extends Util
      */
     public function adjustStockOverSelling($transaction)
     {
-        if ($transaction->status != 'received') {
+        // Allow when status is 'received' or 'partial_received'
+        if (!in_array($transaction->status, ['received', 'partial_received'])) {
             return false;
         }
 
         foreach ($transaction->purchase_lines as $purchase_line) {
             if ($purchase_line->product->enable_stock == 1) {
+                // Available quantity = quantity_received - already sold - adjusted - returned
+                $received_qty = (float) $purchase_line->quantity_received;
+                $sold = (float) $purchase_line->quantity_sold;
+                $adjusted = (float) $purchase_line->quantity_adjusted;
+                $returned = (float) $purchase_line->quantity_returned;
 
-        //Available quantity in the purchase line
-                $purchase_line_qty_avlbl = $purchase_line->quantity_remaining;
+                $purchase_line_qty_avlbl = $received_qty - $sold - $adjusted - $returned;
 
                 if ($purchase_line_qty_avlbl <= 0) {
                     continue;
                 }
 
-                //update sell line purchase line mapping
-                $sell_line_purchase_lines =
-        TransactionSellLinesPurchaseLines::where('purchase_line_id', 0)
-                ->join('transaction_sell_lines as tsl', 'tsl.id', '=', 'transaction_sell_lines_purchase_lines.sell_line_id')
-                ->join('transactions as t', 'tsl.transaction_id', '=', 't.id')
-                ->where('t.location_id', $transaction->location_id)
-                ->where('tsl.variation_id', $purchase_line->variation_id)
-                ->where('tsl.product_id', $purchase_line->product_id)
-
-                ->select('transaction_sell_lines_purchase_lines.*')
-                ->get();
+                // Get unmapped sell lines for this variation/location
+                $sell_line_purchase_lines = TransactionSellLinesPurchaseLines::where('purchase_line_id', 0)
+                    ->join('transaction_sell_lines as tsl', 'tsl.id', '=', 'transaction_sell_lines_purchase_lines.sell_line_id')
+                    ->join('transactions as t', 'tsl.transaction_id', '=', 't.id')
+                    ->where('t.location_id', $transaction->location_id)
+                    ->where('tsl.variation_id', $purchase_line->variation_id)
+                    ->where('tsl.product_id', $purchase_line->product_id)
+                    ->select('transaction_sell_lines_purchase_lines.*')
+                    ->get();
 
                 foreach ($sell_line_purchase_lines as $slpl) {
                     if ($purchase_line_qty_avlbl > 0) {
@@ -1509,7 +1512,7 @@ class ProductUtil extends Util
                             $purchase_line_qty_avlbl -= $slpl->quantity;
                             $slpl->purchase_line_id = $purchase_line->id;
                             $slpl->save();
-                            //update purchase line quantity sold
+                            // Update purchase line quantity sold
                             $purchase_line->quantity_sold += $slpl->quantity;
                             $purchase_line->save();
                         } else {
@@ -1518,10 +1521,11 @@ class ProductUtil extends Util
                             $slpl->quantity = $purchase_line_qty_avlbl;
                             $slpl->save();
 
-                            //update purchase line quantity sold
+                            // Update purchase line quantity sold
                             $purchase_line->quantity_sold += $slpl->quantity;
                             $purchase_line->save();
 
+                            // Create a new unmapped entry for the remaining quantity
                             TransactionSellLinesPurchaseLines::create([
                                 'sell_line_id' => $slpl->sell_line_id,
                                 'purchase_line_id' => 0,

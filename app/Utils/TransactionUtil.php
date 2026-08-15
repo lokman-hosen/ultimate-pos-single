@@ -3331,9 +3331,9 @@ class TransactionUtil extends Util
             $business['pos_settings'] = json_decode($business['pos_settings'], true);
         }
         $allow_overselling = ! empty($business['pos_settings']['allow_overselling']) ?
-                            true : false;
+            true : false;
 
-        //Set flag to check for expired items during SELLING only.
+        // Set flag to check for expired items during SELLING only.
         $stop_selling_expired = false;
         if ($check_expiry) {
             if (session()->has('business') && request()->session()->get('business')['enable_product_expiry'] == 1 && request()->session()->get('business')['on_product_expiry'] == 'stop_selling') {
@@ -3345,7 +3345,7 @@ class TransactionUtil extends Util
 
         $qty_selling = null;
         foreach ($transaction_lines as $line) {
-            //Check if stock is not enabled then no need to assign purchase & sell
+            // Check if stock is not enabled then no need to assign purchase & sell
             $product = Product::find($line->product_id);
             if (empty($product) || $product->enable_stock != 1) {
                 continue;
@@ -3353,18 +3353,28 @@ class TransactionUtil extends Util
 
             $qty_sum_query = $this->get_pl_quantity_sum_string('PL');
 
-            //Get purchase lines, only for products with enable stock.
+            // Get purchase lines, only for products with enable stock.
+            // Include both fully received and partially received purchases.
             $query = Transaction::join('purchase_lines AS PL', 'transactions.id', '=', 'PL.transaction_id')
                 ->where('transactions.business_id', $business['id'])
                 ->where('transactions.location_id', $business['location_id'])
                 ->whereIn('transactions.type', ['purchase', 'purchase_transfer',
                     'opening_stock', 'production_purchase', ])
-                ->where('transactions.status', 'received')
-                ->whereRaw("( $qty_sum_query ) < PL.quantity")
+                ->whereIn('transactions.status', ['received', 'partial_received'])
                 ->where('PL.product_id', $line->product_id)
-                ->where('PL.variation_id', $line->variation_id);
+                ->where('PL.variation_id', $line->variation_id)
+                // Only consider lines that have some received quantity (use COALESCE to fallback to quantity if quantity_received is 0)
+                ->where(function ($q) {
+                    $q->where('PL.quantity_received', '>', 0)
+                        ->orWhere(function ($q2) {
+                            $q2->where('transactions.status', 'received')
+                                ->where('PL.quantity_received', 0)
+                                ->where('PL.quantity', '>', 0);
+                        });
+                })
+                ->whereRaw("( $qty_sum_query ) < COALESCE(PL.quantity_received, PL.quantity)");
 
-            //If product expiry is enabled then check for on expiry conditions
+            // If product expiry is enabled then check for on expiry conditions
             if ($stop_selling_expired && empty($purchase_line_id)) {
                 $stop_before = request()->session()->get('business')['stop_selling_before'];
                 $expiry_date = \Carbon::today()->addDays((int)$stop_before)->toDateString();
@@ -3374,17 +3384,17 @@ class TransactionUtil extends Util
                 });
             }
 
-            //If lot number present consider only lot number purchase line
+            // If lot number present consider only lot number purchase line
             if (! empty($line->lot_no_line_id)) {
                 $query->where('PL.id', $line->lot_no_line_id);
             }
 
-            //If purchase_line_id is given consider only that purchase line
+            // If purchase_line_id is given consider only that purchase line
             if (! empty($purchase_line_id)) {
                 $query->where('PL.id', $purchase_line_id);
             }
 
-            //Sort according to LIFO or FIFO
+            // Sort according to LIFO or FIFO
             if ($business['accounting_method'] == 'lifo') {
                 $query = $query->orderBy('transaction_date', 'desc');
             } else {
@@ -3393,22 +3403,23 @@ class TransactionUtil extends Util
 
             $rows = $query->select(
                 'PL.id as purchase_lines_id',
-                DB::raw("(PL.quantity - ( $qty_sum_query )) AS quantity_available"),
+                DB::raw("(COALESCE(PL.quantity_received, PL.quantity) - ( $qty_sum_query )) AS quantity_available"),
                 'PL.quantity_sold as quantity_sold',
                 'PL.quantity_adjusted as quantity_adjusted',
                 'PL.quantity_returned as quantity_returned',
                 'PL.mfg_quantity_used as mfg_quantity_used',
                 'transactions.invoice_no'
-                    )->get();
+            )->get();
 
             $purchase_sell_map = [];
+            $purchase_adjustment_map = [];
 
-            //Iterate over the rows, assign the purchase line to sell lines.
+            // Iterate over the rows, assign the purchase line to sell lines.
             $qty_selling = $line->quantity;
             foreach ($rows as $k => $row) {
                 $qty_allocated = 0;
 
-                //Check if qty_available is more or equal
+                // Check if qty_available is more or equal
                 if ($qty_selling <= $row->quantity_available) {
                     $qty_allocated = $qty_selling;
                     $qty_selling = 0;
@@ -3417,9 +3428,9 @@ class TransactionUtil extends Util
                     $qty_allocated = $row->quantity_available;
                 }
 
-                //Check for sell mapping or stock adjsutment mapping
+                // Check for sell mapping or stock adjustment mapping
                 if ($mapping_type == 'stock_adjustment') {
-                    //Mapping of stock adjustment
+                    // Mapping of stock adjustment
                     if ($qty_allocated != 0) {
                         $purchase_adjustment_map[] =
                             ['stock_adjustment_line_id' => $line->id,
@@ -3429,12 +3440,12 @@ class TransactionUtil extends Util
                                 'updated_at' => \Carbon::now(),
                             ];
 
-                        //Update purchase line
+                        // Update purchase line
                         PurchaseLine::where('id', $row->purchase_lines_id)
                             ->update(['quantity_adjusted' => $row->quantity_adjusted + $qty_allocated]);
                     }
                 } elseif ($mapping_type == 'purchase') {
-                    //Mapping of purchase
+                    // Mapping of purchase
                     if ($qty_allocated != 0) {
                         $purchase_sell_map[] = ['sell_line_id' => $line->id,
                             'purchase_line_id' => $row->purchase_lines_id,
@@ -3442,12 +3453,12 @@ class TransactionUtil extends Util
                             'created_at' => \Carbon::now(),
                             'updated_at' => \Carbon::now(),
                         ];
-                        //Update purchase line
+                        // Update purchase line
                         PurchaseLine::where('id', $row->purchase_lines_id)
                             ->update(['quantity_sold' => $row->quantity_sold + $qty_allocated]);
                     }
                 } elseif ($mapping_type == 'production_purchase') {
-                    //Mapping of purchase
+                    // Mapping of purchase
                     if ($qty_allocated != 0) {
                         $purchase_sell_map[] = ['sell_line_id' => $line->id,
                             'purchase_line_id' => $row->purchase_lines_id,
@@ -3456,7 +3467,7 @@ class TransactionUtil extends Util
                             'updated_at' => \Carbon::now(),
                         ];
 
-                        //Update purchase line
+                        // Update purchase line
                         PurchaseLine::where('id', $row->purchase_lines_id)
                             ->update(['mfg_quantity_used' => $row->mfg_quantity_used + $qty_allocated]);
                     }
@@ -3468,7 +3479,7 @@ class TransactionUtil extends Util
             }
 
             if (! ($qty_selling == 0 || is_null($qty_selling))) {
-                //If overselling not allowed through exception else create mapping with blank purchase_line_id
+                // If overselling not allowed through exception else create mapping with blank purchase_line_id
                 if (! $allow_overselling) {
                     $variation = Variation::find($line->variation_id);
                     $mismatch_name = $product->name;
@@ -3505,7 +3516,7 @@ class TransactionUtil extends Util
                     \Log::emergency($mismatch_error.' Business: '.$business_name.' Location: '.$location_name);
                     throw new PurchaseSellMismatch($mismatch_error);
                 } else {
-                    //Mapping with no purchase line
+                    // Mapping with no purchase line
                     $purchase_sell_map[] = ['sell_line_id' => $line->id,
                         'purchase_line_id' => 0,
                         'quantity' => $qty_selling,
@@ -3515,7 +3526,7 @@ class TransactionUtil extends Util
                 }
             }
 
-            //Insert the mapping
+            // Insert the mapping
             if (! empty($purchase_adjustment_map)) {
                 TransactionSellLinesPurchaseLines::insert($purchase_adjustment_map);
             }

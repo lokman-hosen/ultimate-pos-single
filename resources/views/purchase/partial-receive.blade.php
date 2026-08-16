@@ -68,6 +68,9 @@
                         <tbody>
                         <?php $row_count = 0; ?>
                         @foreach($purchase->purchase_lines as $key => $purchase_line)
+
+                            @php $pendingQuantity = $purchase_line->quantity - $purchase_line->quantity_received @endphp
+                            {{$pendingQuantity}}
                             <tr @if(!empty($purchase_line->purchase_order_line) && !empty($common_settings['enable_purchase_order'])) data-purchase_order_id="{{$purchase_line->purchase_order_line->transaction_id}}" @endif  @if(!empty($purchase_line->purchase_requisition_line) && !empty($common_settings['enable_purchase_requisition'])) data-purchase_requisition_id="{{$purchase_line->purchase_requisition_line->transaction_id}}" @endif>
                                 <td><span class="sr_number">{{$key+1}}</span></td>
                                 <td>
@@ -81,22 +84,26 @@
                                 <td class="add_without_price_hide text-info">
                                     <b>{{ @format_quantity($purchase_line->quantity_received ?? 0) }}</b>
                                 </td>
-                                <td class="add_without_price_hide text-danger">
-                                    <b>{{ @format_quantity(($purchase_line->quantity ?? 0) - ($purchase_line->quantity_received ?? 0)) }}</b>
+
+                                <td class="add_without_price_hide {{$pendingQuantity == 0 ? 'text-success' : 'text-danger'  }}">
+                                    <b>{{ @format_quantity($pendingQuantity ?? 0) }}</b>
                                 </td>
 
                                 <td>
-                                    <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white partial-receive" data-toggle="modal"
-                                            data-transaction-id="{{ $purchase->id }}"
-                                            data-purchase-line-id="{{ $purchase_line->id }}"
-                                            data-product-id="{{ $purchase_line->product->id }}"
-                                            data-product-name="{{ $purchase_line->product->name }}"
-                                            title="Edit">
-                                        <i class="fa fa-plus"></i>
-                                        Partial Rcv
-                                    </button>
+                                    @if($pendingQuantity != 0)
+                                        <button type="button" class="tw-dw-btn tw-dw-btn-primary tw-dw-btn-sm tw-text-white partial-receive" data-toggle="modal"
+                                                data-transaction-id="{{ $purchase->id }}"
+                                                data-purchase-line-id="{{ $purchase_line->id }}"
+                                                data-product-id="{{ $purchase_line->product->id }}"
+                                                data-product-name="{{ $purchase_line->product->name }}"
+                                                title="Edit">
+                                            <i class="fa fa-plus"></i>
+                                            Partial Rcv
+                                        </button>
+                                    @endif
+
                                     @if($purchase_line->partialReceiveHistories->count() > 0)
-                                        <a class="tw-dw-btn tw-dw-btn-success tw-text-white"
+                                        <a class="tw-dw-btn tw-dw-btn-success tw-dw-btn-sm tw-text-white"
                                            href="{{route('product.partial.receive.history', $purchase_line->product->id)}}">
                                             <i class="fa fa-history"></i>
                                             History

@@ -18,7 +18,7 @@ class ContactUtil extends Util
     {
         $contact = Contact::whereIn('type', ['customer', 'both'])
                     ->where('contacts.business_id', $business_id)
-                    ->where('contacts.is_default', 1)
+                    //->where('contacts.is_default', 1)
                     ->leftjoin('customer_groups as cg', 'cg.id', '=', 'contacts.customer_group_id')
                     ->select('contacts.*',
                         'cg.amount as discount_percent',

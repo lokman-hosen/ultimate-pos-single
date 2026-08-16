@@ -53,8 +53,7 @@
                     $quantity_precision = session('business.quantity_precision', 2);
                 @endphp
                 <div class="table-responsive">
-                    <table class="table table-condensed table-bordered table-th-green text-center table-striped"
-                           id="purchase_entry_table">
+                    <table class="table table-condensed table-bordered table-th-green text-center table-striped" id="purchase_entry_table">
                         <thead>
                         <tr>
                             <th>#</th>
@@ -70,7 +69,6 @@
                         @foreach($purchase->purchase_lines as $key => $purchase_line)
 
                             @php $pendingQuantity = $purchase_line->quantity - $purchase_line->quantity_received @endphp
-                            {{$pendingQuantity}}
                             <tr @if(!empty($purchase_line->purchase_order_line) && !empty($common_settings['enable_purchase_order'])) data-purchase_order_id="{{$purchase_line->purchase_order_line->transaction_id}}" @endif  @if(!empty($purchase_line->purchase_requisition_line) && !empty($common_settings['enable_purchase_requisition'])) data-purchase_requisition_id="{{$purchase_line->purchase_requisition_line->transaction_id}}" @endif>
                                 <td><span class="sr_number">{{$key+1}}</span></td>
                                 <td>

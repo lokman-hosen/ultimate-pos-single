@@ -61,6 +61,7 @@ class ProductUtil extends Util
             'sell_price_inc_tax' => $this->num_uf($selling_price_inc_tax),
             'combo_variations' => $combo_variations,
         ];
+        // price related info
         $variation = $product_variation->variations()->create($variation_data);
 
         Media::uploadMedia($product->business_id, $variation, request(), 'variation_images');
@@ -80,9 +81,6 @@ class ProductUtil extends Util
         if (! is_object($product)) {
             $product = Product::find($product);
         }
-
-
-
 
         //create product variations
         foreach ($input_variations as $key => $value) {
@@ -2047,10 +2045,11 @@ class ProductUtil extends Util
                     ->leftjoin('transactions as t', 'pl.transaction_id', '=', 't.id')
                     ->where('t.location_id', $location_id)
                     //->where('t.status', 'received')
+                    ->whereIn('t.status', ['received', 'partial_received'])
                     ->where('p.business_id', $business_id)
                     ->where('variations.id', $variation_id)
                     ->select(
-                        DB::raw("SUM(IF(t.type='purchase' AND t.status='received', pl.quantity, 0)) as total_purchase"),
+                        DB::raw("SUM(IF(t.type='purchase' AND t.status IN ('received', 'partial_received'), pl.quantity, 0)) as total_purchase"),
                         DB::raw("SUM(IF(t.type='purchase' OR t.type='purchase_return', pl.quantity_returned, 0)) as total_purchase_return"),
                         DB::raw('SUM(pl.quantity_adjusted) as total_adjusted'),
                         DB::raw("SUM(IF(t.type='opening_stock', pl.quantity, 0)) as total_opening_stock"),
@@ -2139,6 +2138,7 @@ class ProductUtil extends Util
                                     'transactions.type as transaction_type',
                                     'sl.quantity as sell_line_quantity',
                                     'pl.quantity as purchase_line_quantity',
+                                    'pl.quantity_received as purchase_line_quantity_received',
                                     'rsl.quantity_returned as sell_return',
                                     'rpl.quantity_returned as purchase_return',
                                     'al.quantity as stock_adjusted',
@@ -2185,10 +2185,11 @@ class ProductUtil extends Util
                     'stock_in_second_unit' => $this->roundQuantity($stock_in_second_unit),
                 ]);
             } elseif ($stock_line->transaction_type == 'purchase') {
-                if ($stock_line->status != 'received') {
+                //if ($stock_line->status != 'received') {
+                if (!in_array($stock_line->status,['received', 'partial_received'])) {
                     continue;
                 }
-                $quantity_change = $stock_line->purchase_line_quantity;
+                $quantity_change = $stock_line->status == 'partial_received' ? $stock_line->purchase_line_quantity_received : $stock_line->purchase_line_quantity;
                 $stock += $quantity_change;
                 $stock_in_second_unit += $stock_line->purchase_secondary_unit_quantity;
                 $stock_history_array[] = array_merge($temp_array, [

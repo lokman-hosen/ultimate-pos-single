@@ -510,12 +510,12 @@ class ProductController extends Controller
                 $product->product_locations()->sync($product_locations);
             }
 
+            // store product price related info
             if ($product->type == 'single') {
                 $this->productUtil->createSingleProductVariation($product->id, $product->sku, $request->input('single_dpp'), $request->input('single_dpp_inc_tax'), $request->input('profit_percent'), $request->input('single_dsp'), $request->input('single_dsp_inc_tax'));
             } elseif ($product->type == 'variable') {
                 if (! empty($request->input('product_variation'))) {
                     $input_variations = $request->input('product_variation');
-                    
                     $this->productUtil->createVariableProductVariations($product->id, $input_variations, $request->input('sku_type'));
                 }
             } elseif ($product->type == 'combo') {
@@ -2416,8 +2416,7 @@ class ProductController extends Controller
 
             //if mismach found update stock in variation location details
             if (isset($stock_history[0]) && (float) $stock_details['current_stock'] != (float) $stock_history[0]['stock']) {
-                VariationLocationDetails::where('variation_id',
-                                            $id)
+                VariationLocationDetails::where('variation_id', $id)
                                     ->where('location_id', request()->input('location_id'))
                                     ->update(['qty_available' => $stock_history[0]['stock']]);
                 $stock_details['current_stock'] = $stock_history[0]['stock'];

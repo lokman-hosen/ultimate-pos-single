@@ -3365,6 +3365,9 @@ class TransactionUtil extends Util
                 ->where('PL.product_id', $line->product_id)
                 ->where('PL.variation_id', $line->variation_id);
 
+
+
+
             //If product expiry is enabled then check for on expiry conditions
             if ($stop_selling_expired && empty($purchase_line_id)) {
                 $stop_before = request()->session()->get('business')['stop_selling_before'];
@@ -3391,6 +3394,7 @@ class TransactionUtil extends Util
             } else {
                 $query = $query->orderBy('transaction_date', 'asc');
             }
+
 
             $rows = $query->select(
                 'PL.id as purchase_lines_id',
@@ -3516,8 +3520,9 @@ class TransactionUtil extends Util
                 }
             }
 
+
             //Insert the mapping
-            if (! empty($purchase_adjustment_map)) {
+            if (isset($purchase_adjustment_map) and ! empty($purchase_adjustment_map)) {
                 TransactionSellLinesPurchaseLines::insert($purchase_adjustment_map);
             }
             if (! empty($purchase_sell_map)) {

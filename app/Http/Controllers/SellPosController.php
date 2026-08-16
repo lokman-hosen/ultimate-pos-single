@@ -604,6 +604,7 @@ class SellPosController extends Controller
                 }
 
 
+
                 if (!empty($transaction->sales_order_ids)) {
                     $this->transactionUtil->updateSalesOrderStatus($transaction->sales_order_ids);
                 }

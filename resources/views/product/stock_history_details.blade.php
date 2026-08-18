@@ -14,6 +14,13 @@
 					<span class="display_currency" data-is_quantity="true">{{$stock_details['total_purchase']}}</span> {{$stock_details['unit']}}
 				</td>
 			</tr>
+
+			<tr>
+				<th>@lang('report.total_purchase')</th>
+				<td>
+					<span class="display_currency" data-is_quantity="true">{{$stock_details['total_purchase']}}</span> {{$stock_details['unit']}}
+				</td>
+			</tr>
 			<tr>
 				<th>@lang('lang_v1.opening_stock')</th>
 				<td>

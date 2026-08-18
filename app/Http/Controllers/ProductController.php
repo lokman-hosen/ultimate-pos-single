@@ -9,6 +9,7 @@ use App\Category;
 use App\Exports\ProductsExport;
 use App\Media;
 use App\Product;
+use App\ProductPartialReceiveHistory;
 use App\ProductVariation;
 use App\PurchaseLine;
 use App\SellingPriceGroup;
@@ -2489,5 +2490,22 @@ class ProductController extends Controller
         $filename = 'products-export-'.\Carbon::now()->format('Y-m-d').'.xlsx';
 
         return Excel::download(new ProductsExport, $filename);
+    }
+
+    public function syncProductQuantity()
+    {
+        $productIds = ProductPartialReceiveHistory::whereDate('created_at', '<', '2026-08-15')->pluck('product_id')->unique()->toArray();
+        foreach ($productIds as $productId) {
+            $purchaseLine = PurchaseLine::where('product_id', $productId)->where('quantity_received', '>', 0)->first();
+            if ($purchaseLine) {
+                $variationLocationDetails = VariationLocationDetails::where('product_id',$productId)->first();
+                if ($variationLocationDetails){
+                    $variationLocationDetails->update(['qty_available' => $purchaseLine->quantity_received-$purchaseLine->quantity_sold]);
+                }
+            }
+        }
+
+        //return redirect()->back()->with('success', 'Product Stock Updated Successfully');
+
     }
 }

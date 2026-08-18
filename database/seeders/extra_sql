@@ -4,3 +4,8 @@ UIH New SQL for table change
 
 UPDATE ALL USER PASSWORD TO 1-8
 1. UPDATE users SET users.password = '$2y$10$r59CptWXU.RaQvBiQv9/COzIZLJCFh3DLX7qnOGynJ7jZ/kQrawJq';
+
+
+1. take all unique product id from product_partial_receive_histories table
+2. check "quantity_received" not nullable and has value and also take "quantity_sold" value from "purchase_lines" table
+3. Go to "variation_location_details" and search by "product_id" and update "qty_available" by "quantity_received-quantity_sold"

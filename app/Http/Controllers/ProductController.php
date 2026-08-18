@@ -2494,7 +2494,7 @@ class ProductController extends Controller
 
     public function syncProductQuantity()
     {
-        $productIds = ProductPartialReceiveHistory::whereDate('created_at', '<', '2026-08-15')->pluck('product_id')->unique()->toArray();
+        $productIds = ProductPartialReceiveHistory::pluck('product_id')->unique()->toArray();
         foreach ($productIds as $productId) {
             $purchaseLine = PurchaseLine::where('product_id', $productId)->where('quantity_received', '>', 0)->first();
             if ($purchaseLine) {

@@ -2105,6 +2105,7 @@ class ProductUtil extends Util
             'total_sell_return' => $sell_details->total_sell_return,
             'total_sell_transfer' => $sell_details->total_sell_transfer,
             'current_stock' => $current_stock->qty_available ?? 0,
+            'total_partial_received' => PurchaseLine::where('product_id', $current_stock->product_id)->sum('quantity_received') ?? 0,
         ];
 
         return $output;

@@ -1,5 +1,6 @@
 @php
 	$common_settings = session()->get('business.common_settings');
+    $productId = request()->segment(3);
 @endphp
 <div class="row">
 	<div class="col-md-12">
@@ -15,12 +16,16 @@
 				</td>
 			</tr>
 
-			<tr>
-				<th>@lang('report.total_purchase')</th>
-				<td>
-					<span class="display_currency" data-is_quantity="true">{{$stock_details['total_purchase']}}</span> {{$stock_details['unit']}}
-				</td>
-			</tr>
+			@if($productId and isset($stock_details['total_partial_received']))
+				<tr>
+					<th>Partial Received</th>
+					<td>
+						<a target="_blank" href="{{route('product.partial.receive.history', $productId)}}" title="Partial Received History">
+							<span class="display_currency" data-is_quantity="true">{{$stock_details['total_partial_received']}}</span> {{$stock_details['unit']}}
+						</a>
+					</td>
+				</tr>
+			@endif
 			<tr>
 				<th>@lang('lang_v1.opening_stock')</th>
 				<td>

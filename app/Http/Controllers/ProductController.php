@@ -2494,11 +2494,12 @@ class ProductController extends Controller
 
     public function syncProductQuantity()
     {
-        $productIds = ProductPartialReceiveHistory::pluck('product_id')->unique()->toArray();
-        foreach ($productIds as $productId) {
-            $purchaseLine = PurchaseLine::where('product_id', $productId)->where('quantity_received', '>', 0)->first();
+        $productPartialRcv = ProductPartialReceiveHistory::all();
+        foreach ($productPartialRcv as $productRcv) {
+            $purchaseLine = PurchaseLine::where('product_id', $productRcv->product_id)
+                ->where('transaction_id', $productRcv->transaction_id)->where('quantity_received', '>', 0)->first();
             if ($purchaseLine) {
-                $variationLocationDetails = VariationLocationDetails::where('product_id',$productId)->first();
+                $variationLocationDetails = VariationLocationDetails::where('product_id',$productRcv->product_id)->first();
                 if ($variationLocationDetails){
                     $variationLocationDetails->update(['qty_available' => $purchaseLine->quantity_received-$purchaseLine->quantity_sold]);
                 }

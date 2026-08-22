@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
     {
         ini_set('memory_limit', '-1');
         set_time_limit(0);
-        Debugbar::enable();
+        //Debugbar::enable();
 
         if (config('app.debug')) {
             error_reporting(E_ALL & ~E_USER_DEPRECATED);

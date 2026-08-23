@@ -24,6 +24,7 @@ use App\Utils\TransactionUtil;
 use App\Variation;
 use App\Warranty;
 use DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -820,8 +821,14 @@ class SellController extends Controller
      */
     public function edit($id)
     {
-        if (! auth()->user()->can('direct_sell.update') && ! auth()->user()->can('so.update')) {
-            abort(403, 'Unauthorized action.');
+        if (Auth::user()->getRoleNameAttribute() == 'Sales Representatives') {
+            if (!Auth::user()->can('draft.update')) {
+                abort(403, 'Unauthorized action.');
+            }
+        }else{
+            if (! auth()->user()->can('direct_sell.update') && ! auth()->user()->can('so.update')) {
+                abort(403, 'Unauthorized action.');
+            }
         }
 
         //Check if the transaction can be edited or not.

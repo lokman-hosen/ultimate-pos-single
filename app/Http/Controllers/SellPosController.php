@@ -1434,7 +1434,8 @@ class SellPosController extends Controller
                         'location_id' => $input['location_id'],
                         'pos_settings' => $pos_settings,
                     ];
-                    $this->transactionUtil->adjustMappingPurchaseSell($status_before, $transaction, $business, $deleted_lines);
+
+                     $this->transactionUtil->adjustMappingPurchaseSell($status_before, $transaction, $business, $deleted_lines);
 
                     //Auto send notification
                     $whatsapp_link = $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $transaction->contact);

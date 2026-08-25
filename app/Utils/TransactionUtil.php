@@ -3319,7 +3319,7 @@ class TransactionUtil extends Util
      * @param  string  $mapping_type = purchase (purchase or stock_adjustment)
      * @param  bool  $check_expiry = true
      * @param  int  $purchase_line_id (default: null)
-     * @return object
+     * @return true
      */
     public function mapPurchaseSell($business, $transaction_lines, $mapping_type = 'purchase', $check_expiry = true, $purchase_line_id = null)
     {
@@ -3330,8 +3330,13 @@ class TransactionUtil extends Util
         if (! empty($business['pos_settings']) && ! is_array($business['pos_settings'])) {
             $business['pos_settings'] = json_decode($business['pos_settings'], true);
         }
-        $allow_overselling = ! empty($business['pos_settings']['allow_overselling']) ?
-            true : false;
+
+        $allow_overselling = false;
+        if (isset($business['pos_settings'])){
+            if (array_key_exists('allow_overselling', $business['pos_settings'])) {
+                $allow_overselling = true;
+            }
+        }
 
         //Set flag to check for expired items during SELLING only.
         $stop_selling_expired = false;
@@ -3364,7 +3369,6 @@ class TransactionUtil extends Util
                 ->whereRaw("( $qty_sum_query ) < PL.quantity")
                 ->where('PL.product_id', $line->product_id)
                 ->where('PL.variation_id', $line->variation_id);
-
 
 
 
@@ -3472,6 +3476,8 @@ class TransactionUtil extends Util
                 }
             }
 
+
+
             if (! ($qty_selling == 0 || is_null($qty_selling))) {
                 //If overselling not allowed through exception else create mapping with blank purchase_line_id
                 if (! $allow_overselling) {
@@ -3521,6 +3527,7 @@ class TransactionUtil extends Util
             }
 
 
+
             //Insert the mapping
             if (isset($purchase_adjustment_map) and ! empty($purchase_adjustment_map)) {
                 TransactionSellLinesPurchaseLines::insert($purchase_adjustment_map);
@@ -3528,7 +3535,9 @@ class TransactionUtil extends Util
             if (! empty($purchase_sell_map)) {
                 TransactionSellLinesPurchaseLines::insert($purchase_sell_map);
             }
+            return true;
         }
+        return true;
     }
 
     /**
@@ -3614,6 +3623,7 @@ class TransactionUtil extends Util
             $new_sell_lines = [];
             $processed_sell_lines = [];
 
+
             foreach ($sell_purchases as $line) {
                 if (empty($line->slpl_id)) {
                     $new_sell_lines[] = $line;
@@ -3647,6 +3657,7 @@ class TransactionUtil extends Util
                     }
                 }
             }
+
 
             //Add mapping for new sell lines and for incremented quantity
             if (! empty($new_sell_lines)) {

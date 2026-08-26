@@ -390,24 +390,24 @@
 
 <script src="{{ asset('js/product.js?v=' . $asset_v) }}"></script>
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        __page_leave_confirmation('#product_add_form');
-        onScan.attachTo(document, {
-            suffixKeyCodes: [13], // enter-key expected at the end of a scan
-            reactToPaste: true, // Compatibility to built-in scanners in paste-mode (as opposed to keyboard-mode)
-            onScan: function(sCode, iQty) {
-                $('input#sku').val(sCode);
-            },
-            onScanError: function(oDebug) {
-                console.log(oDebug);
-            },
-            minLength: 2,
-            ignoreIfFocusOn: ['input', '.form-control']
-            // onKeyDetect: function(iKeyCode){ // output all potentially relevant key events - great for debugging!
-            //     console.log('Pressed: ' + iKeyCode);
-            // }
-        });
-    });
-</script>
+{{--<script type="text/javascript">--}}
+{{--    $(document).ready(function() {--}}
+{{--        __page_leave_confirmation('#product_add_form');--}}
+{{--        onScan.attachTo(document, {--}}
+{{--            suffixKeyCodes: [13], // enter-key expected at the end of a scan--}}
+{{--            reactToPaste: true, // Compatibility to built-in scanners in paste-mode (as opposed to keyboard-mode)--}}
+{{--            onScan: function(sCode, iQty) {--}}
+{{--                $('input#sku').val(sCode);--}}
+{{--            },--}}
+{{--            onScanError: function(oDebug) {--}}
+{{--                console.log(oDebug);--}}
+{{--            },--}}
+{{--            minLength: 2,--}}
+{{--            ignoreIfFocusOn: ['input', '.form-control']--}}
+{{--            // onKeyDetect: function(iKeyCode){ // output all potentially relevant key events - great for debugging!--}}
+{{--            //     console.log('Pressed: ' + iKeyCode);--}}
+{{--            // }--}}
+{{--        });--}}
+{{--    });--}}
+{{--</script>--}}
 @endsection

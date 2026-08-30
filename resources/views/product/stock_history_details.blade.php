@@ -16,6 +16,7 @@
 				</td>
 			</tr>
 
+
 			@if($productId and isset($stock_details['total_partial_received']))
 				<tr>
 					<th>Partial Received</th>

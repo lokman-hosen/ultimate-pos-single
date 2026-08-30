@@ -13,7 +13,6 @@
 
     <!-- Main content -->
     <section class="content">
-
         <!-- Page level currency setting -->
         <input type="hidden" id="p_code" value="{{$currency_details->code}}">
         <input type="hidden" id="p_symbol" value="{{$currency_details->symbol}}">
@@ -120,7 +119,7 @@
 
                                         @if($purchase_line->partialReceiveHistories->count() > 0)
                                             <a class="tw-dw-btn tw-dw-btn-success tw-dw-btn-sm tw-text-white"
-                                               href="{{route('product.partial.receive.history', $purchase_line->product->id)}}">
+                                               href="{{route('product.partial.receive.history', ['product_id' => $purchase_line->product->id, 'transaction_id' => $purchase_line->transaction_id])}}">
                                                 <i class="fa fa-history"></i>
                                                 History
                                             </a>

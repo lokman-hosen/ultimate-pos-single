@@ -20,9 +20,9 @@
 				<tr>
 					<th>Partial Received</th>
 					<td>
-						<a target="_blank" href="{{route('product.partial.receive.history', $productId)}}" title="Partial Received History">
+{{--						<a target="_blank" href="{{route('product.partial.receive.history', $productId)}}" title="Partial Received History">--}}
 							<span class="display_currency" data-is_quantity="true">{{$stock_details['total_partial_received']}}</span> {{$stock_details['unit']}}
-						</a>
+{{--						</a>--}}
 					</td>
 				</tr>
 			@endif

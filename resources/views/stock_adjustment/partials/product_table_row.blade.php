@@ -3,6 +3,8 @@
         {{$product->product_name}}
         <br/>
         {{$product->sub_sku}}
+        <br/>
+        <p><b class="text-success">@lang('report.current_stock'): <span class="qty_available_text">{{$product->formatted_qty_available}}</span> {{ $product->unit }}</b></p>
 
         @if( session()->get('business.enable_lot_number') == 1 || session()->get('business.enable_product_expiry') == 1)
         @php
@@ -14,10 +16,10 @@
             }
         @endphp
 
-        @if($product->enable_stock == 1)
-            <br>
-            <small class="text-muted" style="white-space: nowrap;">@lang('report.current_stock'): <span class="qty_available_text">{{$product->formatted_qty_available}}</span> {{ $product->unit }}</small>
-        @endif
+{{--        @if($product->enable_stock == 1)--}}
+{{--            <br>--}}
+{{--            <small class="text-muted" style="white-space: nowrap;">@lang('report.current_stock'): <span class="qty_available_text">{{$product->formatted_qty_available}}</span> {{ $product->unit }}</small>--}}
+{{--        @endif--}}
         @if(!empty($product->lot_numbers))
             <select class="form-control lot_number" name="products[{{$row_index}}][lot_no_line_id]">
                 <option value="">@lang('lang_v1.lot_n_expiry')</option>

@@ -66,6 +66,44 @@
 
         @component('components.widget', ['class' => 'box-solid'])
             <div class="row">
+                <div class="col-sm-10 col-sm-offset-1">
+                    <input type="hidden" id="product_row_index" value="0">
+                    <input type="hidden" id="total_amount" name="final_total" value="0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-condensed" id="stock_adjustment_product_table">
+                            <thead>
+                            <tr>
+                                <th class="col-sm-4 text-center">
+                                    @lang('sale.product')
+                                </th>
+                                <th class="col-sm-2 text-center">
+                                    @lang('sale.qty')
+                                </th>
+                                <th class="col-sm-2 text-center show_price_with_permission">
+                                    @lang('sale.unit_price')
+                                </th>
+                                <th class="col-sm-2 text-center show_price_with_permission">
+                                    @lang('sale.subtotal')
+                                </th>
+                                <th class="col-sm-2 text-center"><i class="fa fa-trash" aria-hidden="true"></i></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                            <tr class="text-center show_price_with_permission">
+                                <td colspan="3"></td>
+                                <td>
+                                    <div class="pull-right"><b>@lang('stock_adjustment.total_amount'):</b> <span
+                                                id="total_adjustment">0.00</span></div>
+                                </td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-sm-8 col-sm-offset-2">
                     <div class="form-group">
                         <div class="input-group">
@@ -82,44 +120,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-sm-10 col-sm-offset-1">
-                    <input type="hidden" id="product_row_index" value="0">
-                    <input type="hidden" id="total_amount" name="final_total" value="0">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped table-condensed" id="stock_adjustment_product_table">
-                            <thead>
-                                <tr>
-                                    <th class="col-sm-4 text-center">
-                                        @lang('sale.product')
-                                    </th>
-                                    <th class="col-sm-2 text-center">
-                                        @lang('sale.qty')
-                                    </th>
-                                    <th class="col-sm-2 text-center show_price_with_permission">
-                                        @lang('sale.unit_price')
-                                    </th>
-                                    <th class="col-sm-2 text-center show_price_with_permission">
-                                        @lang('sale.subtotal')
-                                    </th>
-                                    <th class="col-sm-2 text-center"><i class="fa fa-trash" aria-hidden="true"></i></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                            <tfoot>
-                                <tr class="text-center show_price_with_permission">
-                                    <td colspan="3"></td>
-                                    <td>
-                                        <div class="pull-right"><b>@lang('stock_adjustment.total_amount'):</b> <span
-                                                id="total_adjustment">0.00</span></div>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
+
         @endcomponent
 
         @component('components.widget', ['class' => 'box-solid'])

@@ -9,6 +9,7 @@
         {{$product->product_name}}
         <br/>
         {{$product->sub_sku}}
+        <p class="text-success"><b>{{'Stock: '.number_format($product->qty_available)}}</b></p>
 
             @if( session()->get('business.enable_lot_number') == 1 || session()->get('business.enable_product_expiry') == 1)
             @php

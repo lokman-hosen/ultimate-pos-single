@@ -1277,7 +1277,7 @@ class ProductController extends Controller
                 }
 
                 $row_data = $this->productUtil->getPosProductRow($variation_id, $location_id);
-                
+
                 // Add variation_id to row_data for duplicate checking
                 $row_data['variation_id'] = $variation_id;
                 

@@ -463,7 +463,14 @@ class ProductUtil extends Util
 
         $query = Variation::join('products AS p', 'variations.product_id', '=', 'p.id')
                 ->join('product_variations AS pv', 'variations.product_variation_id', '=', 'pv.id')
-                ->leftjoin('variation_location_details AS vld', 'variations.id', '=', 'vld.variation_id')
+                //->leftjoin('variation_location_details AS vld', 'variations.id', '=', 'vld.variation_id')
+                ->leftJoin('variation_location_details AS vld', function ($join) use ($location_id) {
+                    $join->on('variations.id', '=', 'vld.variation_id');
+
+                    if (!empty($location_id)) {
+                        $join->where('vld.location_id', '=', $location_id);
+                    }
+                })
                 ->leftjoin('units', 'p.unit_id', '=', 'units.id')
                 ->leftjoin('units as u', 'p.secondary_unit_id', '=', 'u.id')
                 ->leftjoin('brands', function ($join) {
@@ -2783,6 +2790,7 @@ class ProductUtil extends Util
                     ->find($variation->product_id);
                 if ($this_product && count($this_product->modifier_sets) > 0) {
                     $product_ms = $this_product->modifier_sets;
+                    dd($product_ms);
                     $output['html_modifier'] = view('restaurant.product_modifier_set.modifier_for_product')
                         ->with(compact('product_ms', 'row_count'))->render();
                 }

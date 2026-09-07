@@ -227,29 +227,6 @@
 	@endcomponent
 
 	@component('components.widget', ['class' => 'box-primary'])
-		<div class="row">
-			<div class="col-sm-12 missing-product-warning">
-			</div>
-			<div class="col-sm-2 text-center">
-				<button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white tw-dw-btn-sm" data-toggle="modal" data-target="#import_purchase_products_modal">@lang('product.import_products')</button>
-			</div>
-			<div class="col-sm-8">
-				<div class="form-group">
-					<div class="input-group">
-						<span class="input-group-addon">
-							<i class="fa fa-search"></i>
-						</span>
-						{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'), 'disabled' => $search_disable]); !!}
-					</div>
-				</div>
-			</div>
-			<div class="col-sm-2">
-				<div class="form-group">
-					<button tabindex="-1" type="button" class="btn btn-link btn-modal"data-href="{{action([\App\Http\Controllers\ProductController::class, 'quickAdd'])}}" 
-            	data-container=".quick_add_product_modal"><i class="fa fa-plus"></i> @lang( 'product.add_new_product' ) </button>
-				</div>
-			</div>
-		</div>
 		@php
 			$hide_tax = '';
 			if( session()->get('business.enable_inline_tax') == 0){
@@ -261,36 +238,36 @@
 				<div class="table-responsive">
 					<table class="table table-condensed table-bordered table-th-green text-center table-striped" id="purchase_entry_table">
 						<thead>
-							<tr>
-								<th>#</th>
-								<th>@lang( 'product.product_name' )</th>
-								<th>@lang( 'purchase.purchase_quantity' )</th>
-								<th class="add_without_price_hide">@lang( 'lang_v1.unit_cost_before_discount' )</th>
-								<th class="add_without_price_hide">@lang( 'lang_v1.discount_percent' )</th>
-								<th class="add_without_price_hide">@lang( 'purchase.unit_cost_before_tax' )</th>
-								<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.subtotal_before_tax' )</th>
-								<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.product_tax' )</th>
-								<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.net_cost' )</th>
-								<th class="add_without_price_hide">@lang( 'purchase.line_total' )</th>
-								<th class="add_without_price_hide @if(!session('business.enable_editing_product_from_purchase')) hide @endif">
-									@lang( 'lang_v1.profit_margin' )
+						<tr>
+							<th>#</th>
+							<th>@lang( 'product.product_name' )</th>
+							<th>@lang( 'purchase.purchase_quantity' )</th>
+							<th class="add_without_price_hide">@lang( 'lang_v1.unit_cost_before_discount' )</th>
+							<th class="add_without_price_hide">@lang( 'lang_v1.discount_percent' )</th>
+							<th class="add_without_price_hide">@lang( 'purchase.unit_cost_before_tax' )</th>
+							<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.subtotal_before_tax' )</th>
+							<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.product_tax' )</th>
+							<th class="{{$hide_tax}} add_without_price_hide">@lang( 'purchase.net_cost' )</th>
+							<th class="add_without_price_hide">@lang( 'purchase.line_total' )</th>
+							<th class="add_without_price_hide @if(!session('business.enable_editing_product_from_purchase')) hide @endif">
+								@lang( 'lang_v1.profit_margin' )
+							</th>
+							<th class="add_without_price_hide">
+								@lang( 'purchase.unit_selling_price' )
+								<small>(@lang('product.inc_of_tax'))</small>
+							</th>
+							@if(session('business.enable_lot_number'))
+								<th>
+									@lang('lang_v1.lot_number')
 								</th>
-								<th class="add_without_price_hide">
-									@lang( 'purchase.unit_selling_price' )
-									<small>(@lang('product.inc_of_tax'))</small>
+							@endif
+							@if(session('business.enable_product_expiry'))
+								<th>
+									@lang('product.mfg_date') / @lang('product.exp_date')
 								</th>
-								@if(session('business.enable_lot_number'))
-									<th>
-										@lang('lang_v1.lot_number')
-									</th>
-								@endif
-								@if(session('business.enable_product_expiry'))
-									<th>
-										@lang('product.mfg_date') / @lang('product.exp_date')
-									</th>
-								@endif
-								<th><i class="fa fa-trash" aria-hidden="true"></i></th>
-							</tr>
+							@endif
+							<th><i class="fa fa-trash" aria-hidden="true"></i></th>
+						</tr>
 						</thead>
 						<tbody></tbody>
 					</table>
@@ -325,6 +302,31 @@
 				<input type="hidden" id="row_count" value="0">
 			</div>
 		</div>
+		<hr>
+		<div class="row">
+			<div class="col-sm-12 missing-product-warning">
+			</div>
+			<div class="col-sm-2 text-center">
+				<button type="button" class="tw-dw-btn tw-dw-btn-primary tw-text-white tw-dw-btn-sm" data-toggle="modal" data-target="#import_purchase_products_modal">@lang('product.import_products')</button>
+			</div>
+			<div class="col-sm-8">
+				<div class="form-group">
+					<div class="input-group">
+						<span class="input-group-addon">
+							<i class="fa fa-search"></i>
+						</span>
+						{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'), 'disabled' => $search_disable]); !!}
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-2">
+				<div class="form-group">
+					<button tabindex="-1" type="button" class="btn btn-link btn-modal"data-href="{{action([\App\Http\Controllers\ProductController::class, 'quickAdd'])}}" 
+            	data-container=".quick_add_product_modal"><i class="fa fa-plus"></i> @lang( 'product.add_new_product' ) </button>
+				</div>
+			</div>
+		</div>
+
 	@endcomponent
 
 	@component('components.widget', ['class' => 'box-primary'])

@@ -288,6 +288,7 @@ class PurchaseReturnController extends Controller
                 'final_total' => $return_total_inc_tax,
                 'tax_amount' => $request->input('tax_amount'),
                 'tax_id' => $purchase->tax_id,
+                'status' => $purchase->status == 'received' ? 'final' : $purchase->status,
             ];
 
             if (empty($request->input('ref_no'))) {
@@ -311,7 +312,7 @@ class PurchaseReturnController extends Controller
                 $return_transaction_data['business_id'] = $business_id;
                 $return_transaction_data['location_id'] = $purchase->location_id;
                 $return_transaction_data['type'] = 'purchase_return';
-                $return_transaction_data['status'] = 'final';
+                $return_transaction_data['status'] = $purchase->status == 'received' ? 'final' : $purchase->status;
                 $return_transaction_data['contact_id'] = $purchase->contact_id;
                 $return_transaction_data['transaction_date'] = \Carbon::now();
                 $return_transaction_data['created_by'] = request()->session()->get('user.id');

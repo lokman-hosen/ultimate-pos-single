@@ -4425,7 +4425,8 @@ class TransactionUtil extends Util
      */
     public function isReturnExist($transacion_id)
     {
-        return Transaction::where('return_parent_id', $transacion_id)->exists();
+        //return Transaction::where('return_parent_id', $transacion_id)->exists();
+        return Transaction::where('return_parent_id', $transacion_id)->where('status', 'final')->exists();
     }
 
     /**

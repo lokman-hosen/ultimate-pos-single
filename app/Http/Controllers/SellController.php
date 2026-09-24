@@ -1400,7 +1400,16 @@ class SellController extends Controller
                 ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
                 ->editColumn('total_items', '{{@format_quantity($total_items)}}')
                 ->editColumn('total_quantity', '{{@format_quantity($total_quantity)}}')
-                ->addColumn('conatct_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br>@endif {{$name}}')
+//                ->addColumn('conatct_name', '@if(!empty($supplier_business_name)) {{$supplier_business_name}}, <br>@endif {{$name}}')
+                ->addColumn('conatct_name', function ($row){
+                    if ($row->supplier_business_name and $row->name){
+                        return $row->supplier_business_name.','.$row->name;
+                    }elseif ($row->supplier_business_name){
+                        return $row->supplier_business_name;
+                    }else{
+                        return '';
+                    }
+                })
                 ->addColumn('total_amount', function ($row) {
                     $final_total = Activity::forSubject($row)
                         ->with(['causer', 'subject'])

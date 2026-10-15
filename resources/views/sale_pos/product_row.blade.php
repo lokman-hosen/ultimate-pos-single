@@ -48,7 +48,7 @@
 					<span class="tw-font-semibold tw-text-[13px] tw-leading-snug tw-block" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">{!! $product_name !!}</span>
 				@endif
 				<div class="tw-text-[11px] tw-text-slate-400 tw-leading-[1.3] tw-truncate">{{ $product_sku_brand }}@if($product->enable_stock) &nbsp;·&nbsp; {{ @num_format($product->qty_available) }} {{$product->unit}}@endif</div>
-				<div class="tw-text-[11px] tw-text-slate-400 tw-leading-[1.3] tw-truncate">LPP: Tk. {{ @num_format($product->last_purchased_price) }} </div>
+				<div class="tw-text-[11px] tw-text-slate-400 tw-leading-[1.3] tw-truncate">LPP: Tk. {{ @num_format($product->last_purchase_price_inc_tax) }} </div>
 			</div>
 		</div>
 

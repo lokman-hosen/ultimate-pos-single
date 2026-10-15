@@ -460,6 +460,7 @@ class ProductUtil extends Util
     public function getDetailsFromVariation($variation_id, $business_id, $location_id = null, $check_qty = true, $allow_zero_qty = false)
     {
         $variation = Variation::with('media')->findOrFail($variation_id);
+        $lastPurchasePrice = 'n/a';
 
         $query = Variation::join('products AS p', 'variations.product_id', '=', 'p.id')
                 ->join('product_variations AS pv', 'variations.product_variation_id', '=', 'pv.id')
@@ -550,9 +551,18 @@ class ProductUtil extends Util
             'u.short_name as second_unit',
             'brands.name as brand',
             DB::raw('(SELECT purchase_price_inc_tax FROM purchase_lines WHERE 
+                        variation_id=variations.id ORDER BY id DESC LIMIT 1) as last_purchased_price'),
+            DB::raw('(SELECT purchase_price_inc_tax FROM purchase_lines WHERE 
                         variation_id=variations.id ORDER BY id DESC LIMIT 1) as last_purchased_price')
         )
         ->firstOrFail();
+
+        $lastPurchasePrice = PurchaseLine::where('product_id', $product->product_id)->where('variation_id', $product->variation_id)->whereHas('transaction', function ($transaction) {
+            $transaction->where('type', 'purchase');
+        })->orderByDesc('created_at')->first();
+
+        //dd($lastPurchasePrice);
+        $product->last_purchase_price_inc_tax = $lastPurchasePrice->purchase_price_inc_tax ?? 'n/a';
 
         $product->media = $variation->media;
 
@@ -2790,7 +2800,6 @@ class ProductUtil extends Util
                     ->find($variation->product_id);
                 if ($this_product && count($this_product->modifier_sets) > 0) {
                     $product_ms = $this_product->modifier_sets;
-                    dd($product_ms);
                     $output['html_modifier'] = view('restaurant.product_modifier_set.modifier_for_product')
                         ->with(compact('product_ms', 'row_count'))->render();
                 }

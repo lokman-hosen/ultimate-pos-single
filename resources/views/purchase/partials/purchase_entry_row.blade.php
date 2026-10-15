@@ -10,8 +10,14 @@
             @if($product->enable_stock == 1)
                 <br>
                 <small class="text-muted" style="white-space: nowrap;">@lang('report.current_stock'): @if(!empty($variation->variation_location_details->first())) {{@num_format($variation->variation_location_details->first()->qty_available)}} @else 0 @endif {{ $product->unit->short_name }}</small>
+                <br>
+                @if(!empty($purchase_order_line))
+                    <small class="text-muted" style="white-space: nowrap;">LPP: Tk. {{$purchase_order_line->last_purchased_price}} </small>
+                @endif
+
+
             @endif
-            
+
         </td>
         <td>
             @if(!empty($purchase_order_line))
@@ -42,9 +48,9 @@
 
                 $quantity_value = !empty($imported_data) ? $imported_data['quantity'] : $quantity_value;
             @endphp
-            
-            <input type="text" 
-                name="purchases[{{$row_count}}][quantity]" 
+
+            <input type="text"
+                name="purchases[{{$row_count}}][quantity]"
                 value="{{@format_quantity($quantity_value)}}"
                 class="form-control input-sm purchase_quantity input_number mousetrap"
                 required
@@ -52,7 +58,7 @@
                 data-msg-abs_digit="{{__('lang_v1.decimal_value_not_allowed')}}"
                 @if(!empty($max_quantity))
                     data-rule-max-value="{{$max_quantity}}"
-                    data-msg-max-value="{{__('lang_v1.max_quantity_quantity_allowed', ['quantity' => $max_quantity])}}" 
+                    data-msg-max-value="{{__('lang_v1.max_quantity_quantity_allowed', ['quantity' => $max_quantity])}}"
                 @endif
             >
 
@@ -70,7 +76,7 @@
                         </option>
                     @endforeach
                 </select>
-            @else 
+            @else
                 {{ $product->unit->short_name }}
             @endif
 
@@ -81,8 +87,8 @@
                 <br>
                 <span style="white-space: nowrap;">
                 @lang('lang_v1.quantity_in_second_unit', ['unit' => $product->second_unit->short_name])*:</span><br>
-                <input type="text" 
-                name="purchases[{{$row_count}}][secondary_unit_quantity]" 
+                <input type="text"
+                name="purchases[{{$row_count}}][secondary_unit_quantity]"
                 @if($secondary_unit_quantity !== '')value="{{@format_quantity($secondary_unit_quantity)}}" @endif
                 class="form-control input-sm input_number"
                 required>
@@ -118,7 +124,7 @@
             @if(!empty($last_purchase_line))
                 <br>
                 <small class="text-muted">
-                    @lang('lang_v1.prev_discount'): 
+                    @lang('lang_v1.prev_discount'):
                     {{@num_format($last_purchase_line->discount_percent)}}%
                 </small>
             @endif

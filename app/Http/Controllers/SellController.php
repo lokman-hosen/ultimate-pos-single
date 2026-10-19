@@ -10,6 +10,7 @@ use App\CustomerGroup;
 use App\InvoiceScheme;
 use App\Media;
 use App\Product;
+use App\PurchaseLine;
 use App\SellingPriceGroup;
 use App\TaxRate;
 use App\Transaction;
@@ -944,6 +945,12 @@ class SellController extends Controller
 
         if (! empty($sell_details)) {
             foreach ($sell_details as $key => $value) {
+
+                $lastPurchasePrice = PurchaseLine::where('product_id', $value->product_id)->where('variation_id', $value->variation_id)->whereHas('transaction', function ($transaction) {
+                    $transaction->where('type', 'purchase');
+                })->orderByDesc('created_at')->first();
+
+                $value->last_purchase_price_inc_tax = $lastPurchasePrice->purchase_price_inc_tax ?? 'n/a';
 
                 $variation = Variation::with('media')->findOrFail($value->variation_id);
                 $sell_details[$key]->media = $variation->media;

@@ -2802,11 +2802,17 @@ class ProductUtil extends Util
                         ->with(compact('product_ms', 'row_count'))->render();
                 }
             }
-        } catch (\Exception $e) {
-            \Log::emergency('File:' . $e->getFile() . 'Line:' . $e->getLine() . 'Message:' . $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            //getDetailsFromVariation() finds no row when the qty check fails, i.e. genuinely out of stock
+            \Log::info('POS product row not available. variation_id: ' . $variation_id . ' location_id: ' . $location_id . ' Message: ' . $e->getMessage());
 
             $output['success'] = false;
             $output['msg'] = __('lang_v1.item_out_of_stock');
+        } catch (\Throwable $e) {
+            \Log::emergency('File:' . $e->getFile() . ' Line:' . $e->getLine() . ' Message:' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+            $output['success'] = false;
+            $output['msg'] = __('messages.something_went_wrong');
         }
 
         return $output;

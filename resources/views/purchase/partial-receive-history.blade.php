@@ -27,7 +27,7 @@
                 <br>
             </div>
             <div class="col-sm-12 col-md-2 text-right">
-                <a class="tw-dw-btn tw-dw-btn-success tw-dw-btn-md tw-text-white"
+                <a class="tw-dw-btn tw-dw-btn-success tw-dw-btn-sm tw-text-white"
                    href="{{ url()->previous() }}">
                     <i class="fa fa-backward"></i>
                     Back

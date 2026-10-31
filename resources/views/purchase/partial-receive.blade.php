@@ -33,15 +33,25 @@
         <input type="hidden" id="purchase_id" value="{{ $purchase->id }}">
 
         @component('components.widget', ['class' => 'box-primary'])
-
             <div class="row">
-                <div class="col-sm-12">
+                <div class="col-sm-12 col-md-10">
                     <h4>
                         <b>Reference:</b> {{$purchase->ref_no}},
                         <b>Location:</b> {{$purchase->location->name}},
                         <b>Supplier:</b> {{$purchase->contact->supplier_business_name}},
                     </h4>
                 </div>
+                <div class="col-sm-12 col-md-2 text-right">
+                    <a class="tw-dw-btn tw-dw-btn-success tw-dw-btn-sm tw-text-white"
+                       href="{{ url()->previous() }}">
+                        <i class="fa fa-backward"></i>
+                        Back
+                    </a>
+                </div>
+            </div>
+            <br>
+
+            <div class="row">
                 <div class="col-sm-12">
                     @php
                         $hide_tax = '';

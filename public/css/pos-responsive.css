@@ -1,0 +1,821 @@
+/* =====================================================================
+   POS responsive layout  —  /pos/create, /pos/{id}/edit, /pos/payment/{id}
+   Loaded only on the POS layout (layouts/partials/css.blade.php), after app.css.
+
+   Layout model (pure flexbox, no JS height maths):
+
+     .thetop (100dvh)
+       main (flex column)
+         header-pos ............................ flex: none
+         #scrollable-container ................. flex: 1, min-height: 0
+           section.pos-screen .................. flex: 1, padding-bottom = action bar
+             form > .pos-shell > .pos-shell-col
+               .pos-main (row ≥992px / column <992px)
+                 .pos-products-col (#pos_sidebar_wrap)   filters | grid (scrolls)
+                 .pos-cart-col (#pos_cart_panel)
+                   .pos-cart-card
+                     .pos-cart-drawer-head ..... flex: none (drawer only)
+                     .pos-cart-body (flex column)
+                       .row (customer/search) .. flex: none   ← header
+                       .pos-cart-list-row ...... flex: 1, min-height: 0
+                         .pos_product_div ...... overflow-y: auto  ← scrolls
+                       .pos_form_totals ........ flex: none   ← footer
+         .pos-form-actions ..................... position: fixed, bottom: 0
+
+   Breakpoints follow Bootstrap 3 / the precompiled Tailwind build:
+     ≥1400 | 1200–1399 | 992–1199 : split layout (products left, cart right)
+     768–991 | 576–767 | <576      : products full width, cart = drawer
+   ===================================================================== */
+
+:root {
+    --pos-actions-h: 56px;      /* real value set by pos_layout_script */
+    --pos-gap: 8px;
+    --pos-drawer-w: 440px;
+    --pos-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --pos-grid-cols: 2;
+}
+
+/* ---------------------------------------------------------------------
+   1. Full-viewport shell (100dvh with 100vh fallback)
+   --------------------------------------------------------------------- */
+html:has(body.lockscreen) {
+    height: 100%;
+    overflow: hidden;
+}
+body.lockscreen {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+body.lockscreen .thetop {
+    height: 100vh;
+    height: 100dvh;
+    max-width: 100vw;
+    overflow: hidden;
+}
+body.lockscreen .thetop > main {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+body.lockscreen .thetop > main > * {
+    flex-shrink: 0;
+}
+body.lockscreen #scrollable-container {
+    flex: 1 1 auto;
+    height: auto !important;
+    min-height: 0;
+    overflow: hidden !important;
+    display: flex;
+    flex-direction: column;
+}
+/* Footer sits under the fixed action bar anyway */
+body.lockscreen #scrollable-container > footer {
+    display: none;
+}
+
+body.lockscreen #scrollable-container > .pos-screen {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    width: auto !important;          /* AdminLTE gives .content a fixed width + auto margins at 768–991px */
+    max-width: none !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 6px var(--pos-gap) calc(var(--pos-actions-h) + 6px) var(--pos-gap) !important;
+}
+.pos-screen > form {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pos-screen .pos-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    margin: 0 !important;
+}
+.pos-screen .pos-shell-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    float: none;
+    display: flex;
+    flex-direction: column;
+}
+.pos-screen .pos-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: var(--pos-gap);
+    margin: 0 !important;
+    padding: 0 !important;
+}
+/* Bootstrap 3 clearfix pseudo-elements become stray flex items */
+.pos-screen .pos-shell::before, .pos-screen .pos-shell::after,
+.pos-screen .pos-main::before, .pos-screen .pos-main::after,
+.pos-screen .pos-cart-list-row::before, .pos-screen .pos-cart-list-row::after,
+.pos-screen .pos-products-list-row::before, .pos-screen .pos-products-list-row::after {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------
+   2. Cart panel: fixed header / scrolling list / fixed footer
+   --------------------------------------------------------------------- */
+.pos-screen .pos-cart-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.pos-screen .pos-cart-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;   /* for the edit page .overlay */
+    padding: 0;
+}
+.pos-screen .pos-cart-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.pos-screen .pos-cart-body > * {
+    flex: 0 0 auto;           /* header rows + totals footer never shrink */
+}
+.pos-screen .pos-cart-body > .pos-cart-list-row {
+    flex: 1 1 auto;
+    min-height: 0;            /* the essential bit: lets the list shrink and scroll */
+    display: flex;
+    flex-direction: column;
+}
+.pos-screen .pos-cart-list-row > .pos_product_div {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    max-height: none !important;
+    padding-top: 0 !important;    /* otherwise rows peek above the sticky <thead> */
+    width: 100%;
+    float: none;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+/* pos.js (isMobile) adds an inline margin under the totals for the old layout */
+body.lockscreen .pos-screen .pos_form_totals {
+    margin-bottom: 0 !important;
+}
+
+/* Drawer-only chrome (hidden in split / cart-only layouts) */
+.pos-cart-drawer-head,
+.pos-cart-backdrop,
+.pos-cart-bar {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------
+   3. Product panel: filters fixed, grid scrolls
+   --------------------------------------------------------------------- */
+.pos-screen .pos-products-col {
+    flex: 1 1 auto;
+    order: -1;                /* products left, cart right */
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pos-products-col > .pos-sidebar-root {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+}
+.pos-products-col .pos-filter-bar {
+    flex: 0 0 auto;
+}
+.pos-products-col .pos-products-list-row {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pos-products-col .pos-products-list-row > .col-md-12 {
+    float: none;
+    width: 100%;
+    flex: 0 0 auto;
+}
+.pos-products-col .pos-products-list-row > .col-md-12:not(#suggestion_page_loader) {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.pos-products-col #product_list_body {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Product tiles: CSS grid instead of floated Bootstrap columns */
+.pos-products-col #product_list_items {
+    display: grid;
+    grid-template-columns: repeat(var(--pos-grid-cols), minmax(0, 1fr));
+    gap: 6px;
+    align-content: start;
+    padding-bottom: 6px;
+}
+.pos-products-col #product_list_items > [class*="col-"] {
+    width: auto !important;
+    float: none;
+    min-width: 0;
+    padding: 0 !important;
+}
+.pos-products-col #product_list_items > .col-md-12 {
+    grid-column: 1 / -1;
+}
+.pos-products-col #product_list_items .product_box {
+    height: 100%;
+    margin-bottom: 0;
+    overflow: hidden;
+}
+.pos-products-col #product_list_items .product_box .text_div small {
+    overflow-wrap: anywhere;
+}
+
+/* Search / barcode box above the grid (filled by pos_layout_script below 992px) */
+.pos-products-col > .pos-search-slot {
+    display: none;
+}
+.pos-products-col > .pos-search-slot.is-filled {
+    display: block;
+    flex: 0 0 auto;
+    margin-bottom: 6px;
+    padding: 6px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: rgba(17, 17, 26, 0.1) 0 0 16px;
+}
+.pos-search-slot .form-group {
+    margin: 0 !important;
+}
+.pos-search-slot .input-group {
+    width: 100%;
+}
+.pos-search-slot .form-control,
+.pos-search-slot .input-group-btn .btn {
+    height: 44px;
+}
+.pos-search-slot .input-group-btn .btn {
+    min-width: 44px;
+}
+
+/* On real phones the inline grid replaces the "view products" modal button */
+body.lockscreen:has(#pos_sidebar_wrap) [data-target="#mobile_product_suggestion_modal"] {
+    display: none !important;
+}
+
+/* ---------------------------------------------------------------------
+   4. Compact cart rows (card layout)
+      .pos-cart-compact is set by pos_layout_script: always when the cart
+      shares the screen with products, otherwise below 768px.
+   --------------------------------------------------------------------- */
+body.lockscreen .pos-cart-compact #pos_table {
+    display: block;
+    width: 100%;
+    margin: 0;
+    border: 0;
+    overflow: visible;
+    table-layout: auto;
+}
+body.lockscreen .pos-cart-compact #pos_table > thead {
+    display: none !important;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody {
+    display: block;
+    width: 100%;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.pos-empty-state-row,
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.pos-empty-state-row > td {
+    display: block;
+    width: 100%;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 6px 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e8edf2;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td {
+    display: block;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: normal;
+    order: 6;
+    flex: 1 1 100%;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.hide {
+    display: none !important;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.serial_no {
+    order: 0;
+    flex: 0 0 auto;
+    align-self: flex-start;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-product {
+    order: 1;
+    flex: 1 1 calc(100% - 60px);   /* name + remove button own the first line */
+    align-self: center;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-remove {
+    order: 2;
+    flex: 0 0 auto;
+    align-self: flex-start;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-qty {
+    order: 3;
+    flex: 1 1 132px;
+    max-width: 176px;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-price {
+    order: 4;
+    flex: 1 1 88px;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-subtotal {
+    order: 5;
+    flex: 0 1 auto;
+    margin-left: auto;
+    text-align: right !important;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row > td.pos-td-staff {
+    order: 6;
+}
+/* product name: wrap to two lines, never push the row wider */
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-product > div:first-of-type {
+    min-width: 0;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-product .text-link,
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-product .tw-font-semibold {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+/* price label (from data-label) */
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-price[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-price .form-control {
+    width: 100% !important;
+    height: 44px;
+}
+/* qty: [-] [input] [+] as a flex row with 44px targets */
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-qty .input-group {
+    display: flex;
+    width: 100%;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-qty .input-group-btn {
+    display: flex !important;
+    width: auto;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-qty .input-group-btn .btn {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 !important;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-qty .pos_quantity {
+    flex: 1 1 auto;
+    min-width: 36px;
+    width: auto !important;
+    height: 44px;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-qty select.sub_unit {
+    width: 100%;
+    margin-top: 4px;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-subtotal .pos_line_total[type="text"] {
+    width: 96px !important;
+    height: 44px;
+}
+body.lockscreen .pos-cart-compact #pos_table td.pos-td-subtotal .pos_line_total_text {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+}
+/* app.css forces .pos_line_total_text visible on phones, even when it carries .hide */
+body.lockscreen #pos_table td .pos_line_total_text.hide {
+    display: none !important;
+}
+body.lockscreen .pos-cart-compact #pos_table .pos_remove_row {
+    width: 44px;
+    height: 44px;
+}
+
+/* Cart header rows (customer / search / extra fields) inside a narrow cart */
+body.lockscreen .pos-cart-compact .pos-cart-body > .row > [class*="col-"] {
+    width: 100%;
+    float: left;
+}
+body.lockscreen .pos-cart-compact .pos-cart-body > .row > .col-sm-6 {
+    width: 50%;
+}
+
+/* ---------------------------------------------------------------------
+   5. Touch devices: 44px targets in the table layout and action bar
+   --------------------------------------------------------------------- */
+@media (pointer: coarse) {
+    body.lockscreen #pos_table .quantity-up,
+    body.lockscreen #pos_table .quantity-down,
+    body.lockscreen #pos_table .pos_remove_row {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    body.lockscreen #pos_table .pos_quantity {
+        min-height: 44px;
+    }
+}
+@media (pointer: coarse), (max-width: 991.98px) {
+    body.lockscreen .pos-form-actions .pos-actions-main button {
+        min-height: 44px;
+    }
+}
+.pos-form-actions {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ---------------------------------------------------------------------
+   6. Split layout widths + product grid columns
+   --------------------------------------------------------------------- */
+@media (min-width: 576px) {
+    :root { --pos-grid-cols: 2; }
+}
+@media (min-width: 768px) {
+    :root { --pos-grid-cols: 3; }
+}
+@media (min-width: 992px) {
+    :root { --pos-grid-cols: 4; }
+    .pos-screen--with-products .pos-cart-col {
+        flex: 0 0 40%;
+        max-width: 40%;
+    }
+    /* tighter padding on small laptops */
+    .pos-screen--with-products .pos-sidebar-root {
+        padding: 4px !important;
+    }
+}
+@media (min-width: 1200px) {
+    :root { --pos-grid-cols: 5; }
+    .pos-screen--with-products .pos-cart-col {
+        flex-basis: 35%;
+        max-width: 35%;
+    }
+    .pos-screen--with-products .pos-sidebar-root {
+        padding: 6px !important;
+    }
+}
+@media (min-width: 1400px) {
+    :root { --pos-grid-cols: 6; }
+    .pos-screen--with-products .pos-cart-col {
+        flex-basis: 32%;
+        max-width: 32%;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   7. Tablet + mobile (< 992px): products full width, cart = drawer
+   --------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+    .pos-screen--with-products .pos-main {
+        flex-direction: column;
+    }
+    .pos-screen--with-products .pos-products-col {
+        flex: 1 1 auto;
+    }
+
+    .pos-screen--with-products .pos-cart-col {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: var(--pos-actions-h);
+        width: min(var(--pos-drawer-w), 100%);
+        max-width: 100%;
+        z-index: 1045;            /* above the action bar (1000/1030), below BS modals in body (1050) */
+        background: #fff;
+        box-shadow: -12px 0 32px rgba(15, 23, 42, 0.18);
+        transform: translateX(105%);
+        visibility: hidden;
+        transition: transform 280ms var(--pos-ease), visibility 0s linear 280ms;
+    }
+    /* transform: none when open so position:fixed modals inside rows still use the viewport */
+    body.pos-cart-open .pos-screen--with-products .pos-cart-col {
+        transform: none;
+        visibility: visible;
+        transition: transform 280ms var(--pos-ease), visibility 0s;
+    }
+    .pos-screen--with-products .pos-cart-card {
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .pos-screen--with-products .pos-cart-drawer-head {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 6px 8px 6px 14px;
+        padding-top: max(6px, env(safe-area-inset-top, 0px));
+        border-bottom: 1px solid #e2e8f0;
+        background: #fff;
+    }
+    .pos-cart-drawer-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0f172a;
+        min-width: 0;
+    }
+    .pos-cart-drawer-title > .fas {
+        color: #4f46e5;
+    }
+    .pos-cart-drawer-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 24px;
+        padding: 0 7px;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    .pos-cart-drawer-close {
+        width: 44px;
+        height: 44px;
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 10px;
+        background: #f1f5f9;
+        color: #475569;
+        cursor: pointer;
+    }
+    .pos-cart-drawer-close:hover { background: #e2e8f0; color: #0f172a; }
+
+    .pos-screen--with-products .pos-cart-backdrop {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--pos-actions-h);
+        z-index: 1044;
+        background: rgba(15, 23, 42, 0.45);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 200ms ease;
+    }
+    body.pos-cart-open .pos-screen--with-products .pos-cart-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Bottom bar: cart summary while browsing, pay buttons while the cart is open */
+    .pos-screen--with-products .pos-form-actions > .pos-actions-main {
+        display: none !important;
+    }
+    body.pos-cart-open .pos-screen--with-products .pos-form-actions > .pos-actions-main {
+        display: flex !important;
+    }
+    .pos-screen--with-products .pos-cart-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 60px;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 12px 12px 0 0;
+        background: #001F3E;
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    body.pos-cart-open .pos-screen--with-products .pos-cart-bar {
+        display: none;
+    }
+    .pos-cart-bar__icon {
+        position: relative;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+    .pos-cart-bar__badge {
+        position: absolute;
+        top: -3px;
+        right: -5px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 10px;
+        background: rgb(40, 183, 123);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 20px;
+        text-align: center;
+    }
+    .pos-cart-bar__text {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+    }
+    .pos-cart-bar__label {
+        font-size: 12px;
+        opacity: 0.8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .pos-cart-bar__total {
+        font-size: 18px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-variant-numeric: tabular-nums;
+    }
+    .pos-cart-bar__cta {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 44px;
+        padding: 0 14px;
+        border-radius: 10px;
+        background: rgb(40, 183, 123);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   8. Phones (< 768px)
+   --------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+    :root { --pos-gap: 6px; }
+
+    /* cart drawer becomes a full-screen sheet */
+    .pos-screen--with-products .pos-cart-col {
+        width: 100%;
+        box-shadow: none;
+    }
+
+    /* category / brand / featured buttons: one horizontally scrollable chip row */
+    .pos-products-col .pos-filter-bar {
+        flex-wrap: nowrap !important;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px !important;
+    }
+    .pos-products-col .pos-filter-bar::-webkit-scrollbar { display: none; }
+    .pos-products-col .pos-filter-bar > div {
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+    }
+    .pos-products-col .pos-filter-bar .tw-dw-btn {
+        min-height: 44px;
+        height: 44px;
+        width: auto;
+        padding: 0 14px;
+    }
+
+    /* compact product tiles */
+    .pos-products-col #product_list_items .product_box .image-container {
+        height: 52px !important;
+    }
+
+    /* modals: fit the screen and scroll inside */
+    body.lockscreen .modal-dialog {
+        width: auto;
+        max-width: calc(100vw - 16px);
+        margin: 8px auto;
+    }
+    body.lockscreen .modal-body {
+        overflow-x: auto;
+    }
+    body.lockscreen .modal-footer .btn,
+    body.lockscreen .modal-footer button {
+        min-height: 44px;
+    }
+}
+
+/* Very narrow phones (320–359px): keep 2 columns, tighten gutters */
+@media (max-width: 359.98px) {
+    :root { --pos-gap: 4px; }
+    .pos-products-col #product_list_items { gap: 4px; }
+    .pos-cart-bar__cta { padding: 0 10px; font-size: 13px; }
+    .pos-cart-bar__total { font-size: 16px; }
+    body.lockscreen .pos-cart-compact #pos_table > tbody > tr.product_row {
+        padding: 8px 6px;
+    }
+}
+
+/* ---------------------------------------------------------------------
+   9. Short screens (phones in landscape): let the whole cart body scroll,
+      keep the totals pinned at the bottom of the cart.
+   --------------------------------------------------------------------- */
+@media (max-height: 500px) {
+    .pos-screen .pos-cart-body {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+    .pos-screen .pos-cart-body > .pos-cart-list-row {
+        flex: 0 0 auto;
+        min-height: auto;
+    }
+    .pos-screen .pos-cart-list-row > .pos_product_div {
+        flex: 0 0 auto;
+        overflow: visible !important;
+    }
+    body.lockscreen .pos-screen .pos-cart-body > .pos_form_totals {
+        position: sticky !important;
+        bottom: 0;
+        z-index: 3;
+    }
+    body.lockscreen #scrollable-container > .pos-screen {
+        padding-top: 4px !important;
+    }
+    .pos-screen--with-products .pos-cart-drawer-head {
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .pos-screen--with-products .pos-cart-col,
+    .pos-screen--with-products .pos-cart-backdrop {
+        transition: none !important;
+    }
+}

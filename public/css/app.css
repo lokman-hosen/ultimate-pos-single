@@ -1016,11 +1016,7 @@ table.table-text-center td, table.table-text-center th{
 
 /* pos-form-actions: base styles moved to Tailwind in blade */
 
-@media (max-width: 1024px) {
-  .pos_form_totals {
-    margin-bottom: 54px;
-  }
-}
+/* .pos_form_totals bottom spacing: handled by public/css/pos-responsive.css */
 
 /* pos-total: base styles moved to Tailwind in blade */
 
@@ -1269,15 +1265,6 @@ body.lockscreen::-webkit-scrollbar-thumb:hover {
    POS MOBILE VIEW FIXES (≤ 767px)
    =================================================================== */
 @media (max-width: 767px) {
-  body.lockscreen,
-  body.lockscreen #scrollable-container {
-    overflow: hidden !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-  }
-  #pos_sidebar_wrap {
-    display: none !important;
-  }
   body.lockscreen .pos-form-actions {
     position: fixed !important;
     bottom: 0 !important;
@@ -1285,97 +1272,12 @@ body.lockscreen::-webkit-scrollbar-thumb:hover {
     right: 0 !important;
     z-index: 1030;
   }
-  body.lockscreen #add_pos_sell_form .box-body.pb-0,
-  body.lockscreen #edit_pos_sell_form .box-body.pb-0 {
-    display: flex !important;
-    flex-direction: column !important;
-    height: calc(100vh - 60px) !important;
-    max-height: calc(100vh - 60px) !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    padding-bottom: 125px !important;
-  }
-  body.lockscreen #add_pos_sell_form .box-body.pb-0 > .row:has(.pos_product_div),
-  body.lockscreen #edit_pos_sell_form .box-body.pb-0 > .row:has(.pos_product_div) {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  body.lockscreen #add_pos_sell_form .box-body.pb-0 > .row:has(.pos_product_div) > .pos_product_div,
-  body.lockscreen #edit_pos_sell_form .box-body.pb-0 > .row:has(.pos_product_div) > .pos_product_div {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-  }
   body.lockscreen .pos_form_totals {
     position: static !important;
     flex: 0 0 auto !important;
     margin: 0 !important;
   }
   body.lockscreen .pos_form_totals .pos_totals_cell.hide { display: none !important; }
-  body.lockscreen .pos_product_div {
-    height: auto !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  body.lockscreen #pos_table {
-    table-layout: auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-  body.lockscreen #pos_table.table-responsive,
-  body.lockscreen .table-responsive > #pos_table {
-    display: table !important;
-    overflow: visible !important;
-    border: 0 !important;
-  }
-  body.lockscreen #pos_table > thead > tr,
-  body.lockscreen #pos_table > tbody > tr {
-    display: table-row !important;
-  }
-  body.lockscreen #pos_table > tbody > tr > td,
-  body.lockscreen #pos_table > thead > tr > th {
-    display: table-cell !important;
-    vertical-align: middle !important;
-    white-space: nowrap;
-  }
-  body.lockscreen #pos_table > tbody > tr.product_row > td {
-    padding: 6px 8px !important;
-    font-size: 12px;
-    line-height: 1.35;
-  }
-  body.lockscreen #pos_table .form-control {
-    font-size: 12px;
-    height: 30px;
-  }
-  body.lockscreen #pos_table th.pos-th-product,
-  body.lockscreen #pos_table th.pos-th-qty,
-  body.lockscreen #pos_table th.pos-th-staff,
-  body.lockscreen #pos_table th.pos-th-price,
-  body.lockscreen #pos_table th.pos-th-subtotal,
-  body.lockscreen #pos_table td:first-child,
-  body.lockscreen #pos_table td {
-    width: auto !important;
-    min-width: 0 !important;
-  }
-  body.lockscreen #pos_table th.pos-th-product {
-    min-width: 150px !important;
-  }
-  body.lockscreen #pos_table th.pos-th-qty {
-    min-width: 110px !important;
-  }
-  body.lockscreen #pos_table th.pos-th-staff {
-    min-width: 110px !important;
-  }
-  body.lockscreen #pos_table th.pos-th-price {
-    min-width: 80px !important;
-  }
-  body.lockscreen #pos_table th.pos-th-subtotal {
-    min-width: 90px !important;
-  }
   body.lockscreen #pos_table .display_currency.pos_line_total_text,
   body.lockscreen #pos_table .pos_line_total_text {
     white-space: nowrap !important;
@@ -1525,16 +1427,7 @@ body.lockscreen::-webkit-scrollbar-thumb:hover {
    POS Sidebar — drawer, cards, filter badge, subcategory strip
    ============================================================ */
 
-/* Layout lock (desktop) */
-@media (min-width: 1024px) {
-    body.lockscreen #scrollable-container { height: 100vh !important; overflow: hidden !important; }
-    body.lockscreen #scrollable-container > section.content { height: calc(100vh - 60px); overflow: hidden; }
-    body.lockscreen #scrollable-container > section.content > .row,
-    body.lockscreen #scrollable-container > section.content > .row > .col-md-12,
-    body.lockscreen #scrollable-container > section.content > .row > .col-md-12 > .row.tw-flex { height: 100%; }
-    body.lockscreen #scrollable-container > section.content > .row > .col-md-12 > .row.tw-flex > div:first-child > div > .box-body { max-height: 100%; overflow-y: auto; }
-    #pos_sidebar_wrap { max-height: 100%; overflow: hidden; }
-}
+/* Layout lock (desktop): replaced by public/css/pos-responsive.css */
 
 /* Scrollbars */
 #product_list_body::-webkit-scrollbar       { width: 8px; }
@@ -1642,3 +1535,17 @@ body.lockscreen::-webkit-scrollbar-thumb:hover {
 .pos-subcat-pill.is-active { background: #4f46e5; border-color: #4f46e5; color: white; transform: scale(0.96); }
 .pos-subcat-pill--all { border-style: dashed; }
 /* ===== End POS Mobile View Fixes ===== */
+/* ===================================================================
+   Pinch-zoom is allowed (viewport no longer has user-scalable=no).
+   iOS Safari auto-zooms when focusing a field with font-size < 16px,
+   so form fields use 16px on touch phones.
+   =================================================================== */
+@media (max-width: 767.98px) and (pointer: coarse) {
+  input.form-control,
+  select.form-control,
+  textarea.form-control,
+  .select2-container .select2-selection__rendered,
+  .select2-search__field {
+    font-size: 16px !important;
+  }
+}

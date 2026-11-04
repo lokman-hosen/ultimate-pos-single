@@ -87,6 +87,8 @@
 <link rel="stylesheet" href="{{ asset('css/app.css?v='.$asset_v) }}">
 
 @if(isset($pos_layout) && $pos_layout)
+	<!-- POS responsive layout (cart scrolling, breakpoints, cart drawer) -->
+	<link rel="stylesheet" href="{{ asset('css/pos-responsive.css?v='.$asset_v) }}">
 	<style type="text/css">
 		.content{
 			padding-bottom: 0px !important;

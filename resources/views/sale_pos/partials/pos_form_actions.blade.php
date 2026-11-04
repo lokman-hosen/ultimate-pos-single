@@ -4,8 +4,22 @@
 <div class="row" style="margin:0;">
     <div
         class="pos-form-actions tw-fixed tw-bottom-0 tw-left-0 tw-right-0 tw-w-full tw-z-[1000] !tw-mt-0 tw-bg-[#f8fafc] tw-border-t-0 tw-shadow-[0_-2px_10px_rgba(0,0,0,0.06)] tw-rounded-tl-xl tw-rounded-tr-xl">
+        @if (!empty($cart_drawer))
+            {{-- Sticky cart bar: only visible when the cart is a drawer (< 992px) and the drawer is closed --}}
+            <button type="button" class="pos-cart-bar" data-pos-cart-open aria-controls="pos_cart_panel" aria-expanded="false">
+                <span class="pos-cart-bar__icon" aria-hidden="true">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="pos-cart-bar__badge" data-pos-cart-count>0</span>
+                </span>
+                <span class="pos-cart-bar__text">
+                    <span class="pos-cart-bar__label">@lang('lang_v1.cart') · <span data-pos-cart-count>0</span> @lang('sale.item')</span>
+                    <span class="pos-cart-bar__total" data-pos-cart-total>0</span>
+                </span>
+                <span class="pos-cart-bar__cta">@lang('lang_v1.view_cart') <i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+            </button>
+        @endif
         <div
-            class="tw-flex tw-items-center tw-justify-between tw-flex-col sm:tw-flex-row md:tw-flex-row lg:tw-flex-row xl:tw-flex-row tw-gap-2 tw-overflow-x-auto tw-w-full tw-px-4 tw-py-[6px] tw-min-h-[52px]">
+            class="pos-actions-main tw-flex tw-items-center tw-justify-between tw-flex-col sm:tw-flex-row md:tw-flex-row lg:tw-flex-row xl:tw-flex-row tw-gap-2 tw-overflow-x-auto tw-w-full tw-px-4 tw-py-[6px] tw-min-h-[52px]">
 
             <div class="!tw-w-full md:!tw-w-none !tw-flex md:!tw-hidden !tw-flex-row !tw-items-center !tw-gap-3">
                 @if (empty($edit))

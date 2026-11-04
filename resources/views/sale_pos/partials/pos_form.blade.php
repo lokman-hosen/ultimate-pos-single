@@ -204,7 +204,7 @@
         @endif
     @endforeach
 @endif
-<div class="row" style="margin:0;">
+<div class="row pos-cart-list-row" style="margin:0;">
 	<div class="col-sm-12 pos_product_div" style="padding:4px 0 0 0;">
 		<input type="hidden" name="sell_price_tax" id="sell_price_tax" value="{{$business_details->sell_price_tax}}">
 
